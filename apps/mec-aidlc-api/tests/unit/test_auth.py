@@ -3,6 +3,7 @@ import time
 
 import jwt
 import pytest
+from cryptography.hazmat.primitives.asymmetric import rsa
 
 from mec_aidlc_api.adapters.auth import AuthError, JwtVerifier, _extraer_roles
 from mec_aidlc_api.config import Settings
@@ -93,3 +94,78 @@ def test_rechaza_alg_none():
     tok = jwt.encode(payload, None, algorithm="none")
     with pytest.raises(AuthError):
         JwtVerifier(_settings()).verificar(tok)
+
+
+# --- Rama de PRODUCCIÓN: RS256 verificado contra JWKS (M4) ---
+
+_RSA_KEY = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+
+
+class _FakeJwk:
+    def __init__(self, key):
+        self.key = key
+
+
+class _FakeJwksClient:
+    """Sustituye al PyJWKClient real: devuelve la clave pública de test sin tocar la red."""
+
+    def __init__(self, public_key):
+        self._public_key = public_key
+
+    def get_signing_key_from_jwt(self, token):
+        return _FakeJwk(self._public_key)
+
+
+def _rsa_verifier(**over):
+    base = dict(
+        notion_token="t",
+        jwt_jwks_url="https://tenant.auth0.com/.well-known/jwks.json",
+        jwt_issuer=ISS,
+        jwt_audience=AUD,
+        jwt_roles_claim=ROLES_CLAIM,
+    )
+    base.update(over)
+    verifier = JwtVerifier(Settings(**base))
+    verifier._jwks_client = _FakeJwksClient(_RSA_KEY.public_key())
+    return verifier
+
+
+def _rs256_token(**over):
+    claims = {
+        "sub": "auth0|u1",
+        "iss": ISS,
+        "aud": AUD,
+        "exp": int(time.time()) + 3600,
+        ROLES_CLAIM: ["evaluador"],
+    }
+    claims.update(over)
+    claims = {k: v for k, v in claims.items() if v is not None}
+    return jwt.encode(claims, _RSA_KEY, algorithm="RS256")
+
+
+def test_jwks_rs256_token_valido():
+    principal = _rsa_verifier().verificar(_rs256_token())
+    assert principal.sub == "auth0|u1"
+    assert principal.roles == ["evaluador"]
+
+
+def test_jwks_rechaza_alg_none():
+    # Aunque el token no esté firmado, la lista de algoritmos permitidos (RS256) lo rechaza.
+    tok = jwt.encode(
+        {"sub": "u", "iss": ISS, "aud": AUD, "exp": int(time.time()) + 100},
+        None,
+        algorithm="none",
+    )
+    with pytest.raises(AuthError):
+        _rsa_verifier().verificar(tok)
+
+
+def test_jwks_rechaza_audiencia_incorrecta():
+    with pytest.raises(AuthError):
+        _rsa_verifier().verificar(_rs256_token(aud="otra-api"))
+
+
+def test_jwks_fail_closed_sin_iss_aud():
+    # Con JWKS configurado pero sin iss/aud → fail-closed (no verifica).
+    with pytest.raises(AuthError):
+        _rsa_verifier(jwt_issuer="", jwt_audience="").verificar(_rs256_token())

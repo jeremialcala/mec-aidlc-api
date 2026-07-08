@@ -18,6 +18,7 @@ logging.basicConfig(level=logging.INFO)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     settings = get_settings()
+    settings.validar_seguridad()  # fail-closed si la config de auth es insegura en prod (M2)
     app.state.repository = NotionResultRepository(settings)
     app.state.locks = KeyedLocks()
     # Un único verificador JWT: reutiliza la caché de JWKS entre peticiones (ADR-0003).

@@ -36,10 +36,19 @@ Cierre de la Fase 03 (construcción, test-first). Marcar solo lo fundamentado (H
       — verificado en verde localmente; pendiente el primer run en GitHub
 - [ ] TLS 1.2+ verificado de extremo a extremo (entrada y hacia Notion) — A04 (runtime/ops)
 
+## Endurecimiento post-revisión de repositorio (A1–A2, M1–M5)
+- [x] **A1** — `Notion-Version` fijada a `2025-09-03` (API de data sources) + tests de contrato
+- [x] **A2** — `JwtVerifier`/JWKS cacheado una vez en el `lifespan` (no por request)
+- [x] **M1** — 4xx no transitorio de Notion → **502 controlado** (no 500), con test
+- [x] **M2** — `validar_seguridad()` fail-closed en prod (`APP_ENV=prod`); con tests
+- [x] **M3** — despliegue de **instancia única** documentado (README → Despliegue)
+- [x] **M4** — tests de la rama de producción **RS256/JWKS** (firma, `alg=none`, aud, fail-closed)
+- [x] **M5** — opción de estado configurable (`NOTION_ESTADO_DONE`) + contrato de esquema (ADR-0002)
+
 ## Operación y cumplimiento (habilita la retención definida en Gate 0)
 - [ ] Mecanismo/job de **retención**: purga o anonimización de resultados a *relación laboral + 2 años*
       y de logs de auditoría a *1 año* (operativo en Notion / plataforma de logs)
-- [ ] Runbook mínimo de despliegue en servidor interno (variables, secretos, readiness `/health`)
+- [x] Runbook mínimo de despliegue (instancia única, `APP_ENV`, TLS, readiness `/health`) — README → Despliegue
 
 ## Confirmaciones humanas
 - [ ] `<TODO humano>` Tenant Auth0 real configurado + Action que emite el claim de roles con namespace

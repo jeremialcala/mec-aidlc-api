@@ -26,6 +26,9 @@ class Settings(BaseSettings):
         description="BD 'Fichas' para validar el evaluado (ADR-0007); vacío = sin validación",
     )
     notion_evaluado_property: str = Field(default="Evaluado")
+    notion_estado_done: str = Field(
+        default="Done", description="Opción de la propiedad 'Estado' (esquema de la BD)"
+    )
     # La API de data sources (parent data_source_id, /data_sources/query) requiere >= 2025-09-03.
     notion_version: str = Field(default="2025-09-03")
     notion_timeout_s: float = Field(default=10.0)
@@ -64,9 +67,35 @@ class Settings(BaseSettings):
         default=False, description="Solo para desarrollo local — NUNCA en prod"
     )
 
+    # --- Entorno ---
+    app_env: str = Field(default="dev", description="dev | prod (activa validaciones de seguridad)")
+
     @property
     def jwt_algorithms_list(self) -> list[str]:
         return [a.strip() for a in self.jwt_algorithms.split(",") if a.strip()]
+
+    @property
+    def es_produccion(self) -> bool:
+        return self.app_env.strip().lower() in ("prod", "production")
+
+    def validar_seguridad(self) -> None:
+        """Fail-closed en producción ante una configuración de auth insegura (M2).
+
+        Evita desplegar con auth deshabilitada o degradada a HS256 (secreto compartido) por
+        error de configuración. No hace nada fuera de producción.
+        """
+        if not self.es_produccion:
+            return
+        if self.auth_disabled:
+            raise RuntimeError("AUTH_DISABLED no puede ser true en producción.")
+        if not self.jwt_jwks_url:
+            raise RuntimeError(
+                "En producción se requiere JWT_JWKS_URL (verificación RS256 vía JWKS)."
+            )
+        if self.jwt_dev_shared_secret:
+            raise RuntimeError(
+                "JWT_DEV_SHARED_SECRET debe estar vacío en producción (solo dev)."
+            )
 
 
 @lru_cache

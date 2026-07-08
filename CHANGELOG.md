@@ -13,6 +13,8 @@ y el proyecto se adhiere al [Versionado Semántico](https://semver.org/lang/es/)
   contrato (ruta `/data_sources/{id}/query`, parent `data_source_id`, header de versión).
 - El verificador JWT (`PyJWKClient`) se recreaba en cada petición, sin reutilizar la caché de JWKS;
   ahora se crea una sola vez en el `lifespan` y se comparte (coherente con ADR-0003).
+- Un 4xx no transitorio de Notion (token/permiso/esquema/versión) devolvía 500; ahora se mapea a
+  **502 controlado** sin volcar el cuerpo (M1, A10).
 
 ### Añadido
 - Reintento con backoff exponencial (honra `Retry-After`) e idempotencia de creación en el
@@ -29,10 +31,16 @@ y el proyecto se adhiere al [Versionado Semántico](https://semver.org/lang/es/)
   `NOTION_FICHAS_DATA_SOURCE_ID` (vacío = sin validación) — ADR-0007, esc. #5.
 - ADR-0007: integridad referencial del evaluado y modelo de acceso **por rol** (sin alcance por
   evaluado); se retira el escenario #3 del PRD y se sustituye por esa política — esc. #3.
+- `NOTION_ESTADO_DONE` configurable (opción de la propiedad 'Estado') y contrato de esquema de
+  Notion documentado en ADR-0002 (M5). Nota de despliegue de instancia única en el README (M3).
 
 ### Seguridad
 - Verificación JWT endurecida: `iss` y `aud` **obligatorios** con JWKS (fail-closed) y `require`
   de `exp`/`iss`/`aud`; rechazo de `alg=none` verificado con test — T1/T3.
+- **`APP_ENV=prod`** valida al arrancar y **falla** si la config de auth es insegura (auth
+  deshabilitada, sin `JWT_JWKS_URL`, o con `JWT_DEV_SHARED_SECRET`) — M2.
+- Tests de la rama de producción **RS256/JWKS** (firma válida, `alg=none`, `aud` incorrecta,
+  fail-closed sin iss/aud) — M4.
 - **Lockfile con hashes** (`requirements.txt` / `requirements-dev.txt`, `uv pip compile --universal
   --generate-hashes`): el CI instala con verificación de hashes y `pip-audit -r` audita el lock — A03.
 

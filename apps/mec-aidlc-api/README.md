@@ -44,6 +44,14 @@ uvicorn mec_aidlc_api.main:app --reload --app-dir src
 # Docs interactivas: http://localhost:8000/docs
 ```
 
+## Despliegue
+- **Instancia única / un solo worker.** La idempotencia por `(evaluado, fecha)` se garantiza con
+  un lock en proceso (`KeyedLocks`); con varios workers/réplicas dos envíos simultáneos podrían
+  duplicar. Ejecuta con `--workers 1` y una sola réplica (Notion no ofrece unicidad — ADR-0007).
+- **`APP_ENV=prod`**: la app valida al arrancar y **falla** si `AUTH_DISABLED=true`, falta
+  `JWT_JWKS_URL` o hay `JWT_DEV_SHARED_SECRET` (evita auth degradada por configuración).
+- Servidor **interno**, no expuesto a Internet; TLS 1.2+ (ADR-0005).
+
 ## Tests
 ```bash
 pytest        # 56 tests: scoring, JWT (verificación + auth HTTP), adaptador Notion, TOCTOU y abuso del PRD (1–9)

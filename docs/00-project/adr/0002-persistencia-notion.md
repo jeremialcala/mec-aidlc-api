@@ -28,4 +28,9 @@ que exige `Notion-Version >= 2025-09-03` (fijada en `config.py` / `.env`).
 - Positivas: minimización de datos (no se replica PII), consistencia con las fórmulas.
 - Negativas / deuda asumida: disponibilidad ligada a Notion; requiere manejo robusto de
   errores/reintentos (A10) y del token (A04, ver ADR-0005).
+- Acoplamiento al esquema (contrato): la BD debe tener exactamente estas propiedades editables —
+  `Resultado` (title), `Evaluado` (relation), `Fecha del test` (date), `Diagnóstico` (rich_text),
+  `Estado` (status con la opción `NOTION_ESTADO_DONE`, por defecto `Done`) y las 16 competencias
+  (number). Un desajuste de nombre/tipo/opción produce un 4xx de Notion que la API traduce a **502
+  controlado** (no 500). El nombre de la opción de estado es configurable; el resto es contrato fijo.
 - Impacto en threat model: introduce T2 (token Notion) y T4 (dependencia externa).

@@ -9,6 +9,7 @@ sí llegó a persistir (T7/A08). No filtra detalles internos en el error hacia e
 from __future__ import annotations
 
 import asyncio
+import logging
 
 import httpx
 
@@ -16,6 +17,8 @@ from ..config import Settings
 from ..domain.models import COMPETENCIA_A_NOTION, Evaluacion, ResultadoEvaluacion
 
 NOTION_API = "https://api.notion.com/v1"
+
+logger = logging.getLogger("mec_aidlc_api")
 
 
 class NotionUnavailableError(Exception):
@@ -63,7 +66,7 @@ class NotionResultRepository:
         resp = await self._get_ficha_con_reintentos(evaluado_id)
         if resp.status_code in (400, 404):
             return False  # id inexistente o malformado
-        resp.raise_for_status()
+        self._raise_si_error(resp)
         parent = resp.json().get("parent") or {}
         esperado = self._s.notion_fichas_data_source_id
         return esperado in (parent.get("data_source_id"), parent.get("database_id"))
@@ -80,7 +83,7 @@ class NotionResultRepository:
             "Diagnóstico": {
                 "rich_text": [{"text": {"content": resultado.patron_diagnostico}}]
             },
-            "Estado": {"status": {"name": "Done"}},
+            "Estado": {"status": {"name": self._s.notion_estado_done}},
         }
         # 16 competencias como number. NO se escriben campos fórmula.
         for clave, valor in evaluacion.competencias.items():
@@ -197,8 +200,16 @@ class NotionResultRepository:
 
     async def _post_once(self, path: str, json_body: dict) -> dict:
         resp = await self._request_once("POST", path, json_body)
-        resp.raise_for_status()
+        self._raise_si_error(resp)
         return resp.json()
+
+    def _raise_si_error(self, resp: httpx.Response) -> None:
+        """Un 4xx no transitorio (token/permiso/esquema/versión) es un fallo upstream, no del
+        cliente: se mapea a 502 controlado sin volcar el cuerpo de Notion (A10)."""
+        if resp.is_success:
+            return
+        logger.warning("Notion respondió %s (no transitorio)", resp.status_code)
+        raise NotionUnavailableError(f"Notion respondió {resp.status_code}.")
 
     def _backoff(self, intento: int, exc: _TransitorioError | None) -> float:
         if exc is not None and exc.retry_after is not None:

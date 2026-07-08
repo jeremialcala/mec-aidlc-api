@@ -98,6 +98,24 @@ async def test_guardar_idempotente_no_duplica_si_creacion_previa_entro():
     await repo.aclose()
 
 
+async def test_guardar_4xx_no_transitorio_es_unavailable():
+    # Un 401/400 de Notion (token/permiso/esquema) → 502 controlado, no 500, y sin reintentar (M1).
+    n = {"pages": 0}
+
+    def handler(request):
+        if request.url.path.endswith("/pages"):
+            n["pages"] += 1
+            return httpx.Response(401, json={"message": "unauthorized"})
+        return httpx.Response(200, json={"results": []})
+
+    repo = _repo(handler)
+    ev = _evaluacion()
+    with pytest.raises(NotionUnavailableError):
+        await repo.guardar(ev, scoring.evaluar(ev.competencias))
+    assert n["pages"] == 1  # un 4xx no es transitorio: no se reintenta
+    await repo.aclose()
+
+
 async def test_lectura_reintenta_en_error_transitorio():
     n = {"q": 0}
 
