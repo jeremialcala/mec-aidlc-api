@@ -32,6 +32,6 @@ Escala 1–3 por factor (Damage, Reproducibility, Exploitability, Affected users
 | T8 | Dependencia de terceros vulnerable (SDK Notion, libs JWT) | 2 | 2 | 1 | 3 | 2 | 10 | SCA + lockfile + actualización → A03 |
 
 ## Controles y trazabilidad
-Cada amenaza traza a un control OWASP y/o ADR (columna final). Controles pendientes de
-confirmación humana marcados como `<TODO>` en las ADR correspondientes. Ninguna amenaza
-queda sin control asignado.
+Cada amenaza traza a un control OWASP y/o ADR (columna final). Todas las decisiones de control
+están confirmadas (Auth0 RS256/JWKS, rotación de secretos cada 7 días, escala/umbrales 1–4);
+no quedan controles en `<TODO>`. Ninguna amenaza queda sin control asignado.
