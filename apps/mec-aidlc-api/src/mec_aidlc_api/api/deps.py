@@ -12,10 +12,9 @@ from ..config import Settings, get_settings
 bearer_scheme = HTTPBearer(auto_error=False)
 
 
-def get_verifier(
-    settings: Annotated[Settings, Depends(get_settings)],
-) -> JwtVerifier:
-    return JwtVerifier(settings)
+def get_verifier(request: Request) -> JwtVerifier:
+    """El verificador JWT (con su caché de JWKS) se crea una vez en el lifespan."""
+    return request.app.state.verifier
 
 
 def get_principal(

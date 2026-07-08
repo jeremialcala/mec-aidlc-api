@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from .adapters.auth import JwtVerifier
 from .adapters.notion_repository import NotionResultRepository
 from .api.routes import router
 from .application.concurrency import KeyedLocks
@@ -19,6 +20,8 @@ async def lifespan(app: FastAPI):
     settings = get_settings()
     app.state.repository = NotionResultRepository(settings)
     app.state.locks = KeyedLocks()
+    # Un único verificador JWT: reutiliza la caché de JWKS entre peticiones (ADR-0003).
+    app.state.verifier = JwtVerifier(settings)
     try:
         yield
     finally:

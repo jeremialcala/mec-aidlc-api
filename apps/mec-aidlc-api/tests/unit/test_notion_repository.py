@@ -2,6 +2,8 @@
 
 Usa httpx.MockTransport para simular respuestas de Notion sin red.
 """
+import json
+
 import httpx
 import pytest
 
@@ -150,4 +152,37 @@ async def test_evaluado_existe_false_si_ficha_de_otra_bd():
 
     repo = _repo(handler, notion_fichas_data_source_id="fichas-ds")
     assert await repo.evaluado_existe("page-1") is False
+    await repo.aclose()
+
+
+# --- Contrato con la API de Notion (A1: data sources requiere versión moderna) ---
+
+
+async def test_cliente_declara_version_de_data_sources():
+    # El cliente real debe enviar una Notion-Version que soporte data sources (>= 2025-09-03).
+    repo = NotionResultRepository(_settings())  # client real; no hay red hasta hacer un request
+    assert repo._client.headers.get("Notion-Version") == "2025-09-03"
+    await repo.aclose()
+
+
+async def test_contrato_rutas_y_parent_data_source():
+    reqs = []
+
+    def handler(request):
+        reqs.append(request)
+        if request.url.path.endswith("/pages"):
+            return httpx.Response(200, json={"url": "u"})
+        return httpx.Response(200, json={"results": []})
+
+    repo = _repo(handler)
+    ev = _evaluacion()
+    ds = repo._s.notion_data_source_id
+    await repo.existe(ev.evaluado_id, ev.fecha_del_test)
+    await repo.guardar(ev, scoring.evaluar(ev.competencias))
+    paths = [r.url.path for r in reqs]
+    # La consulta usa el endpoint de data sources.
+    assert any(p.endswith(f"/data_sources/{ds}/query") for p in paths)
+    # La creación usa parent data_source_id (no database_id).
+    create = next(r for r in reqs if r.url.path.endswith("/pages"))
+    assert json.loads(create.content)["parent"] == {"data_source_id": ds}
     await repo.aclose()

@@ -7,6 +7,13 @@ y el proyecto se adhiere al [Versionado Semántico](https://semver.org/lang/es/)
 
 ## [Unreleased]
 
+### Corregido
+- `Notion-Version` por defecto (`2022-06-28`) no soportaba los endpoints/parent de *data sources*
+  que usa el adaptador → la integración real fallaría; se fija a `2025-09-03`. Añadidos tests de
+  contrato (ruta `/data_sources/{id}/query`, parent `data_source_id`, header de versión).
+- El verificador JWT (`PyJWKClient`) se recreaba en cada petición, sin reutilizar la caché de JWKS;
+  ahora se crea una sola vez en el `lifespan` y se comparte (coherente con ADR-0003).
+
 ### Añadido
 - Reintento con backoff exponencial (honra `Retry-After`) e idempotencia de creación en el
   adaptador Notion: ante un fallo transitorio re-verifica por (evaluado, fecha) antes de

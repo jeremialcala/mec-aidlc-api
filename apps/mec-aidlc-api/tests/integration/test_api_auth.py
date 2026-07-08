@@ -14,6 +14,7 @@ from httpx import ASGITransport, AsyncClient
 
 os.environ.setdefault("NOTION_TOKEN", "test-token")
 
+from mec_aidlc_api.adapters.auth import JwtVerifier  # noqa: E402
 from mec_aidlc_api.config import Settings, get_settings  # noqa: E402
 from mec_aidlc_api.main import create_app  # noqa: E402
 
@@ -91,6 +92,7 @@ async def client():
     app.dependency_overrides[get_settings] = _settings
     async with LifespanManager(app):
         app.state.repository = _FakeRepo()
+        app.state.verifier = JwtVerifier(_settings())  # verificador con la config de auth del test
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as c:
             yield c

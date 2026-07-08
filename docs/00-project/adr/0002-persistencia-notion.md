@@ -15,6 +15,8 @@ Requisito de `01-requirements/registro-resultados-evaluacion.md`.
 Usar la **API de Notion como único sistema de registro**. La API escribe solo los campos
 editables (16 competencias + `Evaluado` + `Fecha del test` + `Diagnóstico` + `Estado` +
 `Resultado`); nunca los campos fórmula (solo lectura). No se mantiene copia local.
+Se usa la **API de data sources** (parent `data_source_id`, `POST /data_sources/{id}/query`),
+que exige `Notion-Version >= 2025-09-03` (fijada en `config.py` / `.env`).
 
 ## Alternativas consideradas
 | Opción | Pros | Contras | Riesgo de seguridad |

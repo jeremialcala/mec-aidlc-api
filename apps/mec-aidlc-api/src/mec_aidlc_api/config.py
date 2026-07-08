@@ -26,7 +26,8 @@ class Settings(BaseSettings):
         description="BD 'Fichas' para validar el evaluado (ADR-0007); vacío = sin validación",
     )
     notion_evaluado_property: str = Field(default="Evaluado")
-    notion_version: str = Field(default="2022-06-28")
+    # La API de data sources (parent data_source_id, /data_sources/query) requiere >= 2025-09-03.
+    notion_version: str = Field(default="2025-09-03")
     notion_timeout_s: float = Field(default=10.0)
     notion_max_reintentos: int = Field(
         default=2, description="Reintentos ante error transitorio (429/5xx/red) — T6/A10"
