@@ -1,0 +1,52 @@
+"""Configuración cargada desde variables de entorno (ADR-0005).
+
+Ningún secreto vive en el código. `.env` está en `.gitignore`; usa `.env.example` como guía.
+"""
+from __future__ import annotations
+
+from functools import lru_cache
+
+from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env", env_file_encoding="utf-8", extra="ignore"
+    )
+
+    # --- Notion (ADR-0002 / ADR-0005) ---
+    notion_token: str = Field(..., description="Token de integración Notion (secreto)")
+    notion_data_source_id: str = Field(
+        default="089a8a3d-02f4-4aa6-bad5-1d3c53728e32",
+        description="Data source 'Resultados Test MEC-AIDLC'",
+    )
+    notion_evaluado_property: str = Field(default="Evaluado")
+    notion_version: str = Field(default="2022-06-28")
+    notion_timeout_s: float = Field(default=10.0)
+
+    # --- Auth OAuth2 + JWT: Auth0 (ADR-0003) ---
+    # iss = dominio del tenant Auth0 (con barra final); aud = identificador de la API en Auth0.
+    jwt_issuer: str = Field(default="", description="Emisor esperado (iss), p. ej. https://<tenant>.auth0.com/")
+    jwt_audience: str = Field(default="", description="Audiencia esperada (aud) = API identifier de Auth0")
+    jwt_jwks_url: str = Field(default="", description="JWKS del tenant Auth0 (.well-known/jwks.json)")
+    jwt_algorithms: str = Field(default="RS256", description="Algoritmos permitidos (Auth0 firma RS256)")
+    # Auth0 entrega los roles en un claim con namespace (Action) o en 'permissions' (RBAC).
+    jwt_roles_claim: str = Field(
+        default="",
+        description="Claim de roles; Auth0 requiere namespace, p. ej. https://mec-aidlc/roles",
+    )
+    # Solo para pruebas locales; en prod usar JWKS del IdP.
+    jwt_dev_shared_secret: str = Field(default="")
+    auth_disabled: bool = Field(
+        default=False, description="Solo para desarrollo local — NUNCA en prod"
+    )
+
+    @property
+    def jwt_algorithms_list(self) -> list[str]:
+        return [a.strip() for a in self.jwt_algorithms.split(",") if a.strip()]
+
+
+@lru_cache
+def get_settings() -> Settings:
+    return Settings()  # type: ignore[call-arg]
