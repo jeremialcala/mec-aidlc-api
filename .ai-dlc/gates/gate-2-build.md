@@ -22,15 +22,16 @@ Cierre de la Fase 03 (construcción, test-first). Marcar solo lo fundamentado (H
       403 por rol, claim de rol manipulado, `alg=none`, `aud`/`iss` incorrectos — PRD esc. 1,2,9
 - [ ] Tests de **todos los escenarios de abuso** del PRD (1–9), incluidos payloads maliciosos
 - [ ] Tests del adaptador Notion (reintento/backoff, 429/5xx → 502, no escribir campos fórmula)
-- [ ] Cobertura del núcleo de dominio **≥ 90 %** (métrica del charter) verificada en CI
+- [x] Cobertura del núcleo de dominio **≥ 90 %** (100 %) verificada en CI (`--cov-fail-under=90`)
 
 ## Seguridad de la construcción (CI — A02/A03/A04)
 - [ ] **Lockfile** de dependencias (pin exacto, incluye SDK/HTTP y libs JWT) — ADR-0005, A03
-- [ ] **SCA** de dependencias en CI (vulnerabilidades conocidas) — A03
-- [ ] **Escaneo de secretos** en CI (p. ej. gitleaks); falla si detecta secretos — A02/A04
-- [ ] **SAST / lint de seguridad** (p. ej. bandit + ruff) en CI
-- [ ] Pipeline CI verde: lint + tests + cobertura + SCA + secret scan
-- [ ] TLS 1.2+ verificado de extremo a extremo (entrada y hacia Notion) — A04
+- [x] **SCA** de dependencias en CI (`pip-audit`) — A03
+- [x] **Escaneo de secretos** en CI (`gitleaks`); falla si detecta secretos — A02/A04
+- [x] **SAST / lint de seguridad** en CI (`ruff` reglas `S` + `bandit`)
+- [x] Pipeline CI (`.github/workflows/ci.yml`): lint + SAST + tests + cobertura + SCA + secret scan
+      — verificado en verde localmente; pendiente el primer run en GitHub
+- [ ] TLS 1.2+ verificado de extremo a extremo (entrada y hacia Notion) — A04 (runtime/ops)
 
 ## Operación y cumplimiento (habilita la retención definida en Gate 0)
 - [ ] Mecanismo/job de **retención**: purga o anonimización de resultados a *relación laboral + 2 años*

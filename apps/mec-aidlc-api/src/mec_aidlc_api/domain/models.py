@@ -5,10 +5,10 @@ Sin dependencias de FastAPI ni de Notion (Clean Architecture — ADR-0004).
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import StrEnum
 
 
-class Dominio(str, Enum):
+class Dominio(StrEnum):
     """Los cuatro dominios del marco MEC-AIDLC."""
 
     D1_TECNICO_COGNITIVO = "D1"
@@ -63,7 +63,7 @@ COMPETENCIA_A_NOTION: dict[str, str] = {
 }
 
 
-class Estadio(str, Enum):
+class Estadio(StrEnum):
     """Estadios de madurez del marco MEC-AIDLC."""
 
     CONTRIBUIDOR_INDIVIDUAL = "Contribuidor Individual"

@@ -49,14 +49,16 @@ async def registrar_resultado(
     try:
         url, resultado = await caso.ejecutar(evaluacion)
     except ResultadoDuplicadoError as exc:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc))
-    except NotionUnavailableError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT, detail=str(exc)
+        ) from exc
+    except NotionUnavailableError as exc:
         # No filtrar detalles internos (A10).
         logger.warning("Notion no disponible al registrar resultado")
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail="Servicio de persistencia no disponible. Reintenta más tarde.",
-        )
+        ) from exc
     # Auditoría sin datos sensibles (A09).
     logger.info(
         "resultado_registrado sub=%s evaluado=%s estadio=%s",
@@ -84,8 +86,8 @@ async def listar_resultados(
     caso = ListarResultadosPorEvaluado(repo)
     try:
         return await caso.ejecutar(evaluado_id)
-    except NotionUnavailableError:
+    except NotionUnavailableError as exc:
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail="Servicio de persistencia no disponible.",
-        )
+        ) from exc

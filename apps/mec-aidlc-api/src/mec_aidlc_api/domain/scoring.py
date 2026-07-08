@@ -114,7 +114,10 @@ def diagnosticar_patron(p: ResultadoDominio, estadio: Estadio) -> str:
         return "Rígido: adaptabilidad y aprendizaje por debajo del umbral esperado."
 
     if estadio == Estadio.TEAM_PLAYER:
-        return "Team player en desarrollo: base equilibrada, sin destacar aún en generación de valor."
+        return (
+            "Team player en desarrollo: base equilibrada, "
+            "sin destacar aún en generación de valor."
+        )
     return "Contribuidor individual: aún por consolidar colaboración y/o resultados."
 
 

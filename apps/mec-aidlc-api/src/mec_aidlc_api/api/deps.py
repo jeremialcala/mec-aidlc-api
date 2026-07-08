@@ -35,12 +35,12 @@ def get_principal(
         )
     try:
         return verifier.verificar(creds.credentials)
-    except AuthError:
+    except AuthError as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token inválido o expirado.",
             headers={"WWW-Authenticate": "Bearer"},
-        )
+        ) from exc
 
 
 def requiere_rol(*roles_permitidos: str):

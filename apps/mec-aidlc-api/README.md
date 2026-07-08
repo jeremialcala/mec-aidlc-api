@@ -34,7 +34,7 @@ uvicorn mec_aidlc_api.main:app --reload --app-dir src
 
 ## Tests
 ```bash
-pytest        # 18 tests: scoring de dominio + roles JWT + API (incluye escenarios de abuso)
+pytest        # 22 tests: scoring de dominio + roles JWT + API (incluye escenarios de abuso)
 ```
 
 ## Endpoints

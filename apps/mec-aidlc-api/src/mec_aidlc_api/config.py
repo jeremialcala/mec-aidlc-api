@@ -27,10 +27,18 @@ class Settings(BaseSettings):
 
     # --- Auth OAuth2 + JWT: Auth0 (ADR-0003) ---
     # iss = dominio del tenant Auth0 (con barra final); aud = identificador de la API en Auth0.
-    jwt_issuer: str = Field(default="", description="Emisor esperado (iss), p. ej. https://<tenant>.auth0.com/")
-    jwt_audience: str = Field(default="", description="Audiencia esperada (aud) = API identifier de Auth0")
-    jwt_jwks_url: str = Field(default="", description="JWKS del tenant Auth0 (.well-known/jwks.json)")
-    jwt_algorithms: str = Field(default="RS256", description="Algoritmos permitidos (Auth0 firma RS256)")
+    jwt_issuer: str = Field(
+        default="", description="Emisor esperado (iss), p. ej. https://<tenant>.auth0.com/"
+    )
+    jwt_audience: str = Field(
+        default="", description="Audiencia esperada (aud) = API identifier de Auth0"
+    )
+    jwt_jwks_url: str = Field(
+        default="", description="JWKS del tenant Auth0 (.well-known/jwks.json)"
+    )
+    jwt_algorithms: str = Field(
+        default="RS256", description="Algoritmos permitidos (Auth0 firma RS256)"
+    )
     # Auth0 entrega los roles en un claim con namespace (Action) o en 'permissions' (RBAC).
     jwt_roles_claim: str = Field(
         default="",

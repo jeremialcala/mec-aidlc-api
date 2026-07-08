@@ -9,6 +9,16 @@ def _comps(d1=1, d2=1, d3=1, d4=1):
     return {k: valor_por_dom[dom.value] for k, dom in COMPETENCIA_A_DOMINIO.items()}
 
 
+def _comps_por_dominio(items_por_dom):
+    """Asigna 4 ítems explícitos por dominio (para promedios fraccionarios)."""
+    idx = {"D1": 0, "D2": 0, "D3": 0, "D4": 0}
+    out = {}
+    for k, dom in COMPETENCIA_A_DOMINIO.items():
+        out[k] = items_por_dom[dom.value][idx[dom.value]]
+        idx[dom.value] += 1
+    return out
+
+
 def test_hay_16_competencias_repartidas_4x4():
     assert len(COMPETENCIA_A_DOMINIO) == 16
     conteo: dict[str, int] = {}
@@ -58,3 +68,32 @@ def test_experto_aislado():
 def test_contribuidor_individual_por_defecto():
     res = scoring.evaluar(_comps(d1=1, d2=1, d3=1, d4=1))
     assert res.estadio == Estadio.CONTRIBUIDOR_INDIVIDUAL
+
+
+def test_patron_orquestador_sin_criterio_tecnico():
+    # D3 alto (>=B) con D1 bajo (<=C): coordina sin profundidad técnica.
+    res = scoring.evaluar(_comps(d1=2, d2=3, d3=3, d4=3))
+    assert "orquestador" in res.patron_diagnostico.lower()
+
+
+def test_patron_ejecutor_individual():
+    # D2 alto (>=B) con D3 bajo (<=C): entrega resultados, poco integrado al equipo.
+    res = scoring.evaluar(_comps(d1=2, d2=3, d3=2, d4=3))
+    assert "ejecutor" in res.patron_diagnostico.lower()
+
+
+def test_patron_team_player_en_desarrollo():
+    # Perfil equilibrado en ~2.5 sin picos ni déficits: Team Player sin patrón de desbalance.
+    comps = _comps_por_dominio(
+        {"D1": [2, 3, 2, 3], "D2": [2, 3, 2, 3], "D3": [2, 3, 2, 3], "D4": [3, 3, 3, 3]}
+    )
+    res = scoring.evaluar(comps)
+    assert res.estadio == Estadio.TEAM_PLAYER
+    assert "team player" in res.patron_diagnostico.lower()
+
+
+def test_patron_contribuidor_sin_desbalance():
+    # Bajo parejo pero sin gatillar 'rígido' (D4 suficiente): patrón por defecto de CI.
+    res = scoring.evaluar(_comps(d1=2, d2=2, d3=2, d4=3))
+    assert res.estadio == Estadio.CONTRIBUIDOR_INDIVIDUAL
+    assert "contribuidor individual" in res.patron_diagnostico.lower()

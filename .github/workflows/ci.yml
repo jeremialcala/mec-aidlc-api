@@ -1,0 +1,91 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint-test:
+    name: Lint, SAST y tests (py${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/mec-aidlc-api
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: apps/mec-aidlc-api/pyproject.toml
+
+      - name: Instalar dependencias
+        run: pip install -e ".[dev]"
+
+      - name: Ruff (lint + reglas de seguridad)
+        run: ruff check .
+
+      - name: Bandit (SAST del código de producción)
+        run: bandit -q -r src
+
+      - name: Pytest + cobertura del dominio (>= 90%)
+        run: >-
+          pytest
+          --cov=mec_aidlc_api.domain
+          --cov-report=term-missing
+          --cov-fail-under=90
+
+  sca:
+    name: SCA (vulnerabilidades de dependencias)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/mec-aidlc-api
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: apps/mec-aidlc-api/pyproject.toml
+
+      - name: Actualizar toolchain e instalar dependencias
+        # Actualiza pip/setuptools/wheel para no auditar CVEs del toolchain, solo las deps de la app.
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install -e ".[dev]"
+
+      - name: pip-audit (solo dependencias de la app)
+        run: pip-audit --desc --skip-editable
+
+  secret-scan:
+    name: Escaneo de secretos
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: gitleaks (detección de secretos)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          VERSION=$(curl -sSfL -H "Authorization: Bearer ${GH_TOKEN}" \
+            https://api.github.com/repos/gitleaks/gitleaks/releases/latest \
+            | grep -oP '"tag_name":\s*"v\K[^"]+')
+          curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${VERSION}/gitleaks_${VERSION}_linux_x64.tar.gz" \
+            | tar -xz gitleaks
+          ./gitleaks detect --source . --redact --verbose --no-banner
