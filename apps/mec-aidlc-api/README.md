@@ -34,7 +34,7 @@ uvicorn mec_aidlc_api.main:app --reload --app-dir src
 
 ## Tests
 ```bash
-pytest        # 33 tests: scoring, verificación JWT, adaptador Notion (reintento/idempotencia), TOCTOU y API
+pytest        # 50 tests: scoring, JWT (verificación + auth HTTP), adaptador Notion, TOCTOU y abuso del PRD
 ```
 
 ## Endpoints

@@ -2,7 +2,9 @@
 
 Cubre escenarios positivos y de abuso del PRD (validación de esquema, idempotencia).
 """
+import logging
 import os
+from contextlib import asynccontextmanager
 
 import pytest
 from asgi_lifespan import LifespanManager
@@ -11,6 +13,7 @@ from httpx import ASGITransport, AsyncClient
 os.environ.setdefault("NOTION_TOKEN", "test-token")
 os.environ["AUTH_DISABLED"] = "true"
 
+from mec_aidlc_api.adapters.notion_repository import NotionUnavailableError  # noqa: E402
 from mec_aidlc_api.domain.models import Evaluacion, ResultadoEvaluacion  # noqa: E402
 from mec_aidlc_api.main import create_app  # noqa: E402
 
@@ -105,3 +108,87 @@ async def test_duplicado_es_409(client):
     await client.post("/v1/resultados", json=_payload())
     r = await client.post("/v1/resultados", json=_payload())
     assert r.status_code == 409
+
+
+# --- Escenario 4 (PRD): más payloads de abuso → 422 ---
+
+
+async def test_titulo_demasiado_largo_es_422(client):
+    r = await client.post("/v1/resultados", json=_payload(titulo="x" * 201))
+    assert r.status_code == 422
+
+
+async def test_competencia_tipo_invalido_es_422(client):
+    bad = _payload()
+    bad["competencias"]["colaboracion"] = "tres"  # no numérico
+    r = await client.post("/v1/resultados", json=bad)
+    assert r.status_code == 422
+
+
+async def test_falta_campo_requerido_es_422(client):
+    bad = _payload()
+    del bad["evaluado_id"]
+    r = await client.post("/v1/resultados", json=bad)
+    assert r.status_code == 422
+
+
+async def test_competencia_negativa_es_422(client):
+    bad = _payload()
+    bad["competencias"]["colaboracion"] = -1  # < 1
+    r = await client.post("/v1/resultados", json=bad)
+    assert r.status_code == 422
+
+
+class _FakeRepoCaido:
+    """Simula Notion no disponible en la escritura (A10)."""
+
+    async def existe(self, *a):
+        return False
+
+    async def guardar(self, *a):
+        raise NotionUnavailableError("Notion caído")
+
+    async def listar_por_evaluado(self, *a):
+        raise NotionUnavailableError("Notion caído")
+
+    async def aclose(self):
+        return None
+
+
+@asynccontextmanager
+async def _client_con_repo(repo):
+    app = create_app()
+    async with LifespanManager(app):
+        app.state.repository = repo
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as c:
+            yield c
+
+
+async def test_titulo_con_inyeccion_se_persiste_como_contenido():
+    # Esc. 4: texto malicioso NO se interpreta; se guarda literal como contenido (A05).
+    repo = FakeRepo()
+    inyeccion = "'; DROP TABLE resultados; -- {{formula}}"
+    async with _client_con_repo(repo) as c:
+        r = await c.post("/v1/resultados", json=_payload(titulo=inyeccion))
+    assert r.status_code == 201
+    evaluacion, _ = repo.guardados[0]
+    assert evaluacion.titulo == inyeccion
+
+
+async def test_notion_caido_es_502():
+    # Esc. 6: caída de Notion → 502 controlado, sin filtrar detalles internos (A10).
+    async with _client_con_repo(_FakeRepoCaido()) as c:
+        r = await c.post("/v1/resultados", json=_payload())
+    assert r.status_code == 502
+    assert "DROP" not in r.text  # no eco de datos; mensaje genérico
+
+
+async def test_logs_de_auditoria_sin_datos_sensibles(client, caplog):
+    # Esc. 7: el log de auditoría no vuelca puntajes ni el payload (A09).
+    with caplog.at_level(logging.INFO, logger="mec_aidlc_api"):
+        r = await client.post("/v1/resultados", json=_payload())
+    assert r.status_code == 201
+    assert "resultado_registrado" in caplog.text
+    assert "conocimientos_tecnicos" not in caplog.text
+    assert "competencias" not in caplog.text

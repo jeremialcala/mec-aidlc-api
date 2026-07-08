@@ -15,12 +15,16 @@ Cierre de la Fase 03 (construcción, test-first). Marcar solo lo fundamentado (H
       idempotente (re-verifica antes de reintentar) — T7, A08. *Limitación: instancia única (ver `concurrency.py`).*
 - [ ] **Validación de existencia del evaluado** (escenario de abuso #5 del PRD): decidir el
       mecanismo sin violar el no-scope de personas → `<TODO humano: cómo validar la ficha>`
+- [ ] **Alcance de autorización del evaluador** (escenario #3): definir qué evaluados puede
+      leer/registrar cada evaluador (hoy no hay modelo de scope) → `<TODO humano: modelo de alcance>`
 - [x] `iss`/`aud` **obligatorios** con JWKS (fail-closed); `require` de `exp`/`iss`/`aud` en la verificación — T1/T3
 
 ## Pruebas (test-first, cobertura de abuso)
 - [x] Tests de verificación JWT: firma, `alg=none`, `exp`/expirado, `aud`/`iss` incorrectos, roles Auth0 (T3)
-- [ ] Tests de auth a **nivel HTTP** (sin `AUTH_DISABLED`): 401 sin token y 403 por rol — PRD esc. 1,2
-- [ ] Tests de **todos los escenarios de abuso** del PRD (1–9), incluidos payloads maliciosos
+- [x] Tests de auth a **nivel HTTP** (auth activada): 401 (sin token / basura / expirado / firma inválida),
+      403 (lector registra / sin roles), 201 evaluador, 200 lector consulta — PRD esc. 1, 2, 9
+- [x] Escenarios de abuso del PRD 1, 2, 4, 6, 7, 8, 9 (esquema, inyección literal, Notion→502, logs sin PII)
+- [ ] Esc. 3 (alcance del evaluador) y 5 (existencia del evaluado) — requieren decisión de diseño (no implementados)
 - [x] Tests del adaptador Notion (reintento/backoff, idempotencia, lectura con reintento) — 4 tests
 - [x] Cobertura del núcleo de dominio **≥ 90 %** (100 %) verificada en CI (`--cov-fail-under=90`)
 

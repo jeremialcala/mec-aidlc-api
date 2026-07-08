@@ -16,6 +16,8 @@ y el proyecto se adhiere al [Versionado Semántico](https://semver.org/lang/es/)
 - Parámetros de reintento configurables: `NOTION_MAX_REINTENTOS`, `NOTION_BACKOFF_BASE_S`,
   `NOTION_BACKOFF_MAX_S`.
 - Tests: adaptador Notion (reintento/idempotencia/lectura), concurrencia TOCTOU y verificación JWT.
+- Tests de auth a nivel HTTP (401/403/RBAC con auth activada) y de escenarios de abuso del PRD
+  (payloads inválidos, inyección tratada como contenido literal, Notion→502, logs sin PII).
 
 ### Seguridad
 - Verificación JWT endurecida: `iss` y `aud` **obligatorios** con JWKS (fail-closed) y `require`
