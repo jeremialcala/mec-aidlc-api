@@ -1,8 +1,11 @@
 """Test de la carrera TOCTOU de idempotencia en el caso de uso (A08)."""
 import asyncio
 
+import pytest
+
 from mec_aidlc_api.application.concurrency import KeyedLocks
 from mec_aidlc_api.application.services import (
+    EvaluadoInexistenteError,
     RegistrarResultado,
     ResultadoDuplicadoError,
 )
@@ -18,6 +21,9 @@ class _RepoConcurrente:
     async def existe(self, evaluado_id, fecha):
         await asyncio.sleep(0)
         return (evaluado_id, fecha) in self.guardados
+
+    async def evaluado_existe(self, evaluado_id):
+        return True
 
     async def guardar(self, evaluacion, resultado):
         await asyncio.sleep(0)
@@ -48,3 +54,16 @@ async def test_envios_concurrentes_misma_clave_no_duplican():
     assert len(exitos) == 1
     assert len(duplicados) == 1
     assert len(repo.guardados) == 1  # el lock evitó el duplicado (sin lock serían 2)
+
+
+class _RepoSinEvaluado(_RepoConcurrente):
+    async def evaluado_existe(self, evaluado_id):
+        return False
+
+
+async def test_evaluado_inexistente_no_guarda():
+    repo = _RepoSinEvaluado()
+    caso = RegistrarResultado(repo, KeyedLocks())
+    with pytest.raises(EvaluadoInexistenteError):
+        await caso.ejecutar(_ev())
+    assert repo.guardados == []  # esc. #5: no se crea página huérfana

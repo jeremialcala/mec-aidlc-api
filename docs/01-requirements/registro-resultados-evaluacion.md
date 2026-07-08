@@ -25,11 +25,13 @@ Actores: **Evaluador** (rol que escribe), **Lector** (rol de solo consulta), **C
 ### Escenarios negativos / abuso (requerido por Gate 0)
 1. **Sin token o token inválido/expirado** → 401; nada se persiste. (A07)
 2. **Lector intenta registrar** → 403 por rol insuficiente. (A01)
-3. **Evaluador consulta resultados de un evaluado fuera de su alcance** → 403 / filtrado. (A01)
+3. **Acceso por rol (sin alcance por evaluado):** cualquier evaluador/lector autenticado
+   consulta cualquier evaluado; el control es el rol + auditoría (ADR-0007). (A01)
 4. **Payload malicioso:** competencia fuera de rango, tipo inválido, campos extra, valores
    enormes, inyección en `Diagnóstico`/título → 422 por validación de esquema estricta;
    los textos se envían a Notion como contenido, nunca interpolados en fórmulas ni queries. (A05)
-5. **Evaluado inexistente en la BD de personas** → 422; no se crea página huérfana.
+5. **Evaluado inexistente en la BD de fichas** → 422, validado por lectura contra 'Equipo de
+   Desarrollo — Fichas'; no se crea página huérfana. (A05, ADR-0007)
 6. **Notion caído / rate-limit / timeout** → 502/503 controlado con reintento idempotente;
    sin filtrar detalles internos en el error. (A10)
 7. **Token de Notion filtrado en logs** → prohibido: los secretos y los puntajes no se

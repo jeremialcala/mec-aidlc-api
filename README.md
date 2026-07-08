@@ -6,7 +6,7 @@ la base de datos Notion *Resultados Test MEC-AIDLC*. Generado hasta **Gate 1** (
 ## Estructura
 ```
 docs/
-  00-project/     charter, glosario, clasificación de datos, ADRs (0001–0006)
+  00-project/     charter, glosario, clasificación de datos, ADRs (0001–0007)
   01-requirements/ PRD con escenarios de abuso + requisitos OWASP ASVS
   02-design/      arquitectura, threat model STRIDE/DREAD, contrato de API
   architecture/   diagramas C4 (Context + Container, Mermaid)

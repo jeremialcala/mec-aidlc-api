@@ -11,6 +11,10 @@ class ResultadoDuplicadoError(Exception):
     """Ya existe un resultado para (evaluado, fecha) — viola idempotencia (A08)."""
 
 
+class EvaluadoInexistenteError(Exception):
+    """El evaluado no existe en la BD de fichas — evita páginas huérfanas (esc. #5, A05)."""
+
+
 class RegistrarResultado:
     """Calcula el scoring y persiste una evaluación."""
 
@@ -23,6 +27,10 @@ class RegistrarResultado:
         # en el proceso; con la creación idempotente del adaptador, evita duplicados (A08).
         clave = f"{evaluacion.evaluado_id}\x00{evaluacion.fecha_del_test}"
         async with self._locks.get(clave):
+            if not await self._repo.evaluado_existe(evaluacion.evaluado_id):
+                raise EvaluadoInexistenteError(
+                    "El evaluado no existe en la base de fichas."
+                )
             if await self._repo.existe(evaluacion.evaluado_id, evaluacion.fecha_del_test):
                 raise ResultadoDuplicadoError(
                     "Ya existe un resultado para ese evaluado y fecha."

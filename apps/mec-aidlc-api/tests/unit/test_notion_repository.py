@@ -26,13 +26,13 @@ def _settings(**over):
     return Settings(**base)
 
 
-def _repo(handler):
+def _repo(handler, **settings_over):
     client = httpx.AsyncClient(
         transport=httpx.MockTransport(handler),
         base_url=NOTION_API,
         headers={"Authorization": "Bearer test-token"},
     )
-    return NotionResultRepository(_settings(), client=client)
+    return NotionResultRepository(_settings(**settings_over), client=client)
 
 
 def _evaluacion():
@@ -109,4 +109,45 @@ async def test_lectura_reintenta_en_error_transitorio():
     out = await repo.listar_por_evaluado("e1")
     assert out == [{"id": "1", "url": "u"}]
     assert n["q"] == 2
+    await repo.aclose()
+
+
+# --- Validación del evaluado contra la BD Fichas (esc. #5, ADR-0007) ---
+
+
+async def test_evaluado_existe_sin_config_omite_validacion():
+    def handler(request):  # no debería llamarse
+        raise AssertionError("no debe consultar Notion sin BD de fichas")
+
+    repo = _repo(handler)  # notion_fichas_data_source_id vacío
+    assert await repo.evaluado_existe("x") is True
+    await repo.aclose()
+
+
+async def test_evaluado_existe_true_si_ficha_en_la_bd():
+    def handler(request):
+        assert request.method == "GET"
+        assert request.url.path.endswith("/pages/page-1")
+        return httpx.Response(200, json={"parent": {"data_source_id": "fichas-ds"}})
+
+    repo = _repo(handler, notion_fichas_data_source_id="fichas-ds")
+    assert await repo.evaluado_existe("page-1") is True
+    await repo.aclose()
+
+
+async def test_evaluado_existe_false_si_404():
+    repo = _repo(
+        lambda request: httpx.Response(404, json={}),
+        notion_fichas_data_source_id="fichas-ds",
+    )
+    assert await repo.evaluado_existe("inexistente") is False
+    await repo.aclose()
+
+
+async def test_evaluado_existe_false_si_ficha_de_otra_bd():
+    def handler(request):
+        return httpx.Response(200, json={"parent": {"data_source_id": "otra-bd"}})
+
+    repo = _repo(handler, notion_fichas_data_source_id="fichas-ds")
+    assert await repo.evaluado_existe("page-1") is False
     await repo.aclose()

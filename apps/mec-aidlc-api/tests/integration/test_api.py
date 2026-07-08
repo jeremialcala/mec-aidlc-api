@@ -28,6 +28,9 @@ class FakeRepo:
             for e, _ in self.guardados
         )
 
+    async def evaluado_existe(self, evaluado_id: str) -> bool:
+        return True
+
     async def guardar(self, evaluacion, resultado) -> str:
         self.guardados.append((evaluacion, resultado))
         return "https://www.notion.so/fake-page"
@@ -145,6 +148,9 @@ class _FakeRepoCaido:
     async def existe(self, *a):
         return False
 
+    async def evaluado_existe(self, *a):
+        return True
+
     async def guardar(self, *a):
         raise NotionUnavailableError("Notion caído")
 
@@ -182,6 +188,22 @@ async def test_notion_caido_es_502():
         r = await c.post("/v1/resultados", json=_payload())
     assert r.status_code == 502
     assert "DROP" not in r.text  # no eco de datos; mensaje genérico
+
+
+class _FakeRepoSinEvaluado(FakeRepo):
+    """El evaluado no existe en la BD de fichas (esc. #5)."""
+
+    async def evaluado_existe(self, evaluado_id: str) -> bool:
+        return False
+
+
+async def test_evaluado_inexistente_es_422():
+    # Esc. 5: evaluado ausente de la BD de fichas → 422, sin crear página huérfana (ADR-0007).
+    repo = _FakeRepoSinEvaluado()
+    async with _client_con_repo(repo) as c:
+        r = await c.post("/v1/resultados", json=_payload())
+    assert r.status_code == 422
+    assert repo.guardados == []  # no se persistió nada
 
 
 async def test_logs_de_auditoria_sin_datos_sensibles(client, caplog):

@@ -17,6 +17,10 @@ class ResultRepository(Protocol):
         """True si ya existe un resultado para (evaluado, fecha) — idempotencia (A08)."""
         ...
 
+    async def evaluado_existe(self, evaluado_id: str) -> bool:
+        """True si el evaluado existe en la BD de fichas (integridad referencial, esc. #5)."""
+        ...
+
     async def guardar(
         self, evaluacion: Evaluacion, resultado: ResultadoEvaluacion
     ) -> str:

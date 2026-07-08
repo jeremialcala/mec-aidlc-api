@@ -21,6 +21,10 @@ class Settings(BaseSettings):
         default="089a8a3d-02f4-4aa6-bad5-1d3c53728e32",
         description="Data source 'Resultados Test MEC-AIDLC'",
     )
+    notion_fichas_data_source_id: str = Field(
+        default="",
+        description="BD 'Fichas' para validar el evaluado (ADR-0007); vacío = sin validación",
+    )
     notion_evaluado_property: str = Field(default="Evaluado")
     notion_version: str = Field(default="2022-06-28")
     notion_timeout_s: float = Field(default=10.0)

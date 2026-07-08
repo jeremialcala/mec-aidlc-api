@@ -52,6 +52,22 @@ class NotionResultRepository:
         )
         return bool(data.get("results"))
 
+    async def evaluado_existe(self, evaluado_id: str) -> bool:
+        """Valida el evaluado contra la BD 'Fichas' (solo lectura) — ADR-0007, esc. #5.
+
+        Si no hay BD de fichas configurada, la validación se omite (dev/local); en producción
+        debe configurarse `NOTION_FICHAS_DATA_SOURCE_ID`.
+        """
+        if not self._s.notion_fichas_data_source_id:
+            return True
+        resp = await self._get_ficha_con_reintentos(evaluado_id)
+        if resp.status_code in (400, 404):
+            return False  # id inexistente o malformado
+        resp.raise_for_status()
+        parent = resp.json().get("parent") or {}
+        esperado = self._s.notion_fichas_data_source_id
+        return esperado in (parent.get("data_source_id"), parent.get("database_id"))
+
     async def guardar(
         self, evaluacion: Evaluacion, resultado: ResultadoEvaluacion
     ) -> str:
@@ -152,15 +168,35 @@ class NotionResultRepository:
             "No se pudo contactar Notion tras varios intentos."
         ) from ultimo
 
-    async def _post_once(self, path: str, json_body: dict) -> dict:
+    async def _get_ficha_con_reintentos(self, page_id: str) -> httpx.Response:
+        path = f"/pages/{page_id}"
+        ultimo: _TransitorioError | None = None
+        for intento in range(self._s.notion_max_reintentos + 1):
+            if intento > 0:
+                await asyncio.sleep(self._backoff(intento, ultimo))
+            try:
+                return await self._request_once("GET", path)
+            except _TransitorioError as exc:
+                ultimo = exc
+        raise NotionUnavailableError(
+            "No se pudo validar el evaluado en Notion."
+        ) from ultimo
+
+    async def _request_once(
+        self, method: str, path: str, json_body: dict | None = None
+    ) -> httpx.Response:
         try:
-            resp = await self._client.post(path, json=json_body)
+            resp = await self._client.request(method, path, json=json_body)
         except httpx.HTTPError as exc:
             raise _TransitorioError("Error de red al contactar Notion.") from exc
         if resp.status_code == 429:
             raise _TransitorioError("Notion respondió 429 (rate limit).", _retry_after(resp))
         if resp.status_code >= 500:
             raise _TransitorioError(f"Notion respondió {resp.status_code}.")
+        return resp
+
+    async def _post_once(self, path: str, json_body: dict) -> dict:
+        resp = await self._request_once("POST", path, json_body)
         resp.raise_for_status()
         return resp.json()
 

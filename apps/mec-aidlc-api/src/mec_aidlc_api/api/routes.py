@@ -11,6 +11,7 @@ from ..adapters.notion_repository import NotionUnavailableError
 from ..application.concurrency import KeyedLocks
 from ..application.ports import ResultRepository
 from ..application.services import (
+    EvaluadoInexistenteError,
     ListarResultadosPorEvaluado,
     RegistrarResultado,
     ResultadoDuplicadoError,
@@ -50,6 +51,9 @@ async def registrar_resultado(
     caso = RegistrarResultado(repo, locks)
     try:
         url, resultado = await caso.ejecutar(evaluacion)
+    except EvaluadoInexistenteError as exc:
+        # 422 literal: el nombre HTTP_422_* fue renombrado/deprecado en Starlette reciente.
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
     except ResultadoDuplicadoError as exc:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT, detail=str(exc)

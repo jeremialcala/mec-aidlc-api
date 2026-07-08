@@ -18,6 +18,10 @@ y el proyecto se adhiere al [Versionado Semántico](https://semver.org/lang/es/)
 - Tests: adaptador Notion (reintento/idempotencia/lectura), concurrencia TOCTOU y verificación JWT.
 - Tests de auth a nivel HTTP (401/403/RBAC con auth activada) y de escenarios de abuso del PRD
   (payloads inválidos, inyección tratada como contenido literal, Notion→502, logs sin PII).
+- Validación de existencia del evaluado contra la BD 'Fichas' (solo lectura) → 422 si no existe;
+  `NOTION_FICHAS_DATA_SOURCE_ID` (vacío = sin validación) — ADR-0007, esc. #5.
+- ADR-0007: integridad referencial del evaluado y modelo de acceso **por rol** (sin alcance por
+  evaluado); se retira el escenario #3 del PRD y se sustituye por esa política — esc. #3.
 
 ### Seguridad
 - Verificación JWT endurecida: `iss` y `aud` **obligatorios** con JWKS (fail-closed) y `require`

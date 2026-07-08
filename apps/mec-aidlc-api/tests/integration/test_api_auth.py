@@ -55,6 +55,9 @@ class _FakeRepo:
     async def existe(self, *a):
         return False
 
+    async def evaluado_existe(self, *a):
+        return True
+
     async def guardar(self, *a):
         return "https://www.notion.so/fake"
 
