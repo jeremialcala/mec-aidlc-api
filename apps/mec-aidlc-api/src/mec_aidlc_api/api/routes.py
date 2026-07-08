@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from ..adapters.auth import Principal
 from ..adapters.notion_repository import NotionUnavailableError
+from ..application.concurrency import KeyedLocks
 from ..application.ports import ResultRepository
 from ..application.services import (
     ListarResultadosPorEvaluado,
@@ -15,7 +16,7 @@ from ..application.services import (
     ResultadoDuplicadoError,
 )
 from ..domain.models import Evaluacion
-from .deps import get_repository, requiere_rol
+from .deps import get_locks, get_repository, requiere_rol
 from .schemas import PromediosResponse, RegistrarResultadoRequest, ResultadoResponse
 
 logger = logging.getLogger("mec_aidlc_api")
@@ -38,6 +39,7 @@ async def registrar_resultado(
     body: RegistrarResultadoRequest,
     principal: Annotated[Principal, Depends(requiere_rol("evaluador"))],
     repo: Annotated[ResultRepository, Depends(get_repository)],
+    locks: Annotated[KeyedLocks, Depends(get_locks)],
 ) -> ResultadoResponse:
     evaluacion = Evaluacion(
         evaluado_id=body.evaluado_id,
@@ -45,7 +47,7 @@ async def registrar_resultado(
         titulo=body.titulo,
         competencias=body.competencias.model_dump(),
     )
-    caso = RegistrarResultado(repo)
+    caso = RegistrarResultado(repo, locks)
     try:
         url, resultado = await caso.ejecutar(evaluacion)
     except ResultadoDuplicadoError as exc:

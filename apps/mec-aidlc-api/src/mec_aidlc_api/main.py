@@ -8,6 +8,7 @@ from fastapi import FastAPI
 
 from .adapters.notion_repository import NotionResultRepository
 from .api.routes import router
+from .application.concurrency import KeyedLocks
 from .config import get_settings
 
 logging.basicConfig(level=logging.INFO)
@@ -17,6 +18,7 @@ logging.basicConfig(level=logging.INFO)
 async def lifespan(app: FastAPI):
     settings = get_settings()
     app.state.repository = NotionResultRepository(settings)
+    app.state.locks = KeyedLocks()
     try:
         yield
     finally:

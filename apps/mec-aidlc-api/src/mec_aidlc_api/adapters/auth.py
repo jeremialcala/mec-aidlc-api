@@ -34,16 +34,27 @@ class JwtVerifier:
         )
 
     def verificar(self, token: str) -> Principal:
+        # Exige exp siempre; iss/aud como claims requeridos cuando están configurados.
+        require = ["exp"]
+        if self._s.jwt_issuer:
+            require.append("iss")
+        if self._s.jwt_audience:
+            require.append("aud")
+        options = {"require": require}
         try:
-            options = {"require": ["exp"]}
             if self._jwks_client is not None:
+                # Producción (Auth0): iss y aud son obligatorios; fail-closed si faltan (T1/T3).
+                if not (self._s.jwt_issuer and self._s.jwt_audience):
+                    raise AuthError(
+                        "Config JWT incompleta: iss y aud son obligatorios con JWKS."
+                    )
                 signing_key = self._jwks_client.get_signing_key_from_jwt(token).key
                 claims = jwt.decode(
                     token,
                     signing_key,
                     algorithms=self._s.jwt_algorithms_list,
-                    audience=self._s.jwt_audience or None,
-                    issuer=self._s.jwt_issuer or None,
+                    audience=self._s.jwt_audience,
+                    issuer=self._s.jwt_issuer,
                     options=options,
                 )
             elif self._s.jwt_dev_shared_secret:

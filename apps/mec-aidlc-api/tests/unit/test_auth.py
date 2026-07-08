@@ -1,5 +1,42 @@
-"""Tests de extracción de roles del JWT (Auth0 y fallbacks) — ADR-0003."""
-from mec_aidlc_api.adapters.auth import _extraer_roles
+"""Tests de verificación y extracción de roles del JWT (Auth0/dev) — ADR-0003."""
+import time
+
+import jwt
+import pytest
+
+from mec_aidlc_api.adapters.auth import AuthError, JwtVerifier, _extraer_roles
+from mec_aidlc_api.config import Settings
+
+ISS = "https://tenant.auth0.com/"
+AUD = "https://mec-aidlc-api"
+ROLES_CLAIM = "https://mec-aidlc/roles"
+SECRET = "dev-secret-para-tests-0123456789abcdef"  # >=32 bytes (evita warning HMAC)
+
+
+def _settings(**over):
+    base = dict(
+        notion_token="t",
+        jwt_dev_shared_secret=SECRET,
+        jwt_issuer=ISS,
+        jwt_audience=AUD,
+        jwt_roles_claim=ROLES_CLAIM,
+    )
+    base.update(over)
+    return Settings(**base)
+
+
+def _token(**over):
+    claims = {
+        "sub": "auth0|u1",
+        "iss": ISS,
+        "aud": AUD,
+        "exp": int(time.time()) + 3600,
+        ROLES_CLAIM: ["evaluador"],
+    }
+    claims.update(over)
+    # Permite omitir claims pasando None.
+    claims = {k: v for k, v in claims.items() if v is not None}
+    return jwt.encode(claims, SECRET, algorithm="HS256")
 
 
 def test_roles_desde_claim_con_namespace_auth0():
@@ -22,3 +59,37 @@ def test_roles_claim_plano_y_keycloak():
 def test_sin_roles_devuelve_vacio():
     # Un token Auth0 sin la Action de roles no otorga acceso (RBAC deny-by-default).
     assert _extraer_roles({"sub": "abc"}, "https://mec-aidlc/roles") == []
+
+
+def test_verifica_token_valido_y_extrae_roles():
+    principal = JwtVerifier(_settings()).verificar(_token())
+    assert principal.sub == "auth0|u1"
+    assert principal.roles == ["evaluador"]
+
+
+def test_rechaza_audiencia_incorrecta():
+    with pytest.raises(AuthError):
+        JwtVerifier(_settings()).verificar(_token(aud="otra-api"))
+
+
+def test_rechaza_emisor_incorrecto():
+    with pytest.raises(AuthError):
+        JwtVerifier(_settings()).verificar(_token(iss="https://malicioso/"))
+
+
+def test_rechaza_token_sin_exp():
+    with pytest.raises(AuthError):
+        JwtVerifier(_settings()).verificar(_token(exp=None))
+
+
+def test_rechaza_token_expirado():
+    with pytest.raises(AuthError):
+        JwtVerifier(_settings()).verificar(_token(exp=int(time.time()) - 10))
+
+
+def test_rechaza_alg_none():
+    # Token sin firma (alg=none): los algoritmos permitidos están fijados → se rechaza (T3).
+    payload = {"sub": "u", "iss": ISS, "aud": AUD, "exp": int(time.time()) + 100}
+    tok = jwt.encode(payload, None, algorithm="none")
+    with pytest.raises(AuthError):
+        JwtVerifier(_settings()).verificar(tok)

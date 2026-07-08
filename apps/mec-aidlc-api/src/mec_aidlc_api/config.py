@@ -24,6 +24,15 @@ class Settings(BaseSettings):
     notion_evaluado_property: str = Field(default="Evaluado")
     notion_version: str = Field(default="2022-06-28")
     notion_timeout_s: float = Field(default=10.0)
+    notion_max_reintentos: int = Field(
+        default=2, description="Reintentos ante error transitorio (429/5xx/red) — T6/A10"
+    )
+    notion_backoff_base_s: float = Field(
+        default=0.2, description="Base del backoff exponencial entre reintentos (s)"
+    )
+    notion_backoff_max_s: float = Field(
+        default=5.0, description="Tope del backoff por intento (s)"
+    )
 
     # --- Auth OAuth2 + JWT: Auth0 (ADR-0003) ---
     # iss = dominio del tenant Auth0 (con barra final); aud = identificador de la API en Auth0.

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from ..domain import scoring
 from ..domain.models import Evaluacion, ResultadoEvaluacion
+from .concurrency import KeyedLocks
 from .ports import ResultRepository
 
 
@@ -13,17 +14,22 @@ class ResultadoDuplicadoError(Exception):
 class RegistrarResultado:
     """Calcula el scoring y persiste una evaluación."""
 
-    def __init__(self, repo: ResultRepository) -> None:
+    def __init__(self, repo: ResultRepository, locks: KeyedLocks) -> None:
         self._repo = repo
+        self._locks = locks
 
     async def ejecutar(self, evaluacion: Evaluacion) -> tuple[str, ResultadoEvaluacion]:
-        if await self._repo.existe(evaluacion.evaluado_id, evaluacion.fecha_del_test):
-            raise ResultadoDuplicadoError(
-                "Ya existe un resultado para ese evaluado y fecha."
-            )
-        resultado = scoring.evaluar(evaluacion.competencias)
-        url = await self._repo.guardar(evaluacion, resultado)
-        return url, resultado
+        # Serializa por (evaluado, fecha) para cerrar la carrera TOCTOU entre existe() y guardar()
+        # en el proceso; con la creación idempotente del adaptador, evita duplicados (A08).
+        clave = f"{evaluacion.evaluado_id}\x00{evaluacion.fecha_del_test}"
+        async with self._locks.get(clave):
+            if await self._repo.existe(evaluacion.evaluado_id, evaluacion.fecha_del_test):
+                raise ResultadoDuplicadoError(
+                    "Ya existe un resultado para ese evaluado y fecha."
+                )
+            resultado = scoring.evaluar(evaluacion.competencias)
+            url = await self._repo.guardar(evaluacion, resultado)
+            return url, resultado
 
 
 class ListarResultadosPorEvaluado:

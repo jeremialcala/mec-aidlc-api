@@ -7,6 +7,20 @@ y el proyecto se adhiere al [Versionado Semántico](https://semver.org/lang/es/)
 
 ## [Unreleased]
 
+### Añadido
+- Reintento con backoff exponencial (honra `Retry-After`) e idempotencia de creación en el
+  adaptador Notion: ante un fallo transitorio re-verifica por (evaluado, fecha) antes de
+  reintentar, para no duplicar — T6/T7, A08/A10.
+- Lock por `(evaluado, fecha)` en el caso de uso que cierra la carrera TOCTOU entre la
+  verificación de existencia y el guardado (`application/concurrency.py`) — A08.
+- Parámetros de reintento configurables: `NOTION_MAX_REINTENTOS`, `NOTION_BACKOFF_BASE_S`,
+  `NOTION_BACKOFF_MAX_S`.
+- Tests: adaptador Notion (reintento/idempotencia/lectura), concurrencia TOCTOU y verificación JWT.
+
+### Seguridad
+- Verificación JWT endurecida: `iss` y `aud` **obligatorios** con JWKS (fail-closed) y `require`
+  de `exp`/`iss`/`aud`; rechazo de `alg=none` verificado con test — T1/T3.
+
 ## [0.1.0] - 2026-07-08
 
 Bootstrap AI-DLC del servicio, cerrado hasta Gate 1 (diseño). Gate 0 y Gate 1 superados.

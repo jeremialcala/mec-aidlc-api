@@ -10,18 +10,18 @@ Cierre de la Fase 03 (construcción, test-first). Marcar solo lo fundamentado (H
 - [x] Manejo de errores sin fuga (A10) y logging de auditoría sin PII/secretos (A09)
 
 ## Brechas diseño↔código a cerrar (el diseño las promete; el scaffold aún no las realiza)
-- [ ] **Reintento con backoff** idempotente en el adaptador Notion (timeout/429/5xx) — T6, A10
-- [ ] **Idempotencia sin carrera TOCTOU**: `existe()`→`guardar()` no es atómico; garantizar
-      unicidad efectiva por `(evaluado, fecha)` (verificación previa + manejo del duplicado) — T7, A08
+- [x] **Reintento con backoff** idempotente en el adaptador Notion (timeout/429/5xx, honra `Retry-After`) — T6, A10
+- [x] **Idempotencia sin carrera TOCTOU**: lock por `(evaluado, fecha)` en el caso de uso + creación
+      idempotente (re-verifica antes de reintentar) — T7, A08. *Limitación: instancia única (ver `concurrency.py`).*
 - [ ] **Validación de existencia del evaluado** (escenario de abuso #5 del PRD): decidir el
       mecanismo sin violar el no-scope de personas → `<TODO humano: cómo validar la ficha>`
-- [ ] `iss`/`aud` **obligatorios** en configuración de producción (hoy vacíos ⇒ no se validan) — T1/T3
+- [x] `iss`/`aud` **obligatorios** con JWKS (fail-closed); `require` de `exp`/`iss`/`aud` en la verificación — T1/T3
 
 ## Pruebas (test-first, cobertura de abuso)
-- [ ] Tests de **auth reales** (sin `AUTH_DISABLED`): 401 sin token / token inválido/expirado,
-      403 por rol, claim de rol manipulado, `alg=none`, `aud`/`iss` incorrectos — PRD esc. 1,2,9
+- [x] Tests de verificación JWT: firma, `alg=none`, `exp`/expirado, `aud`/`iss` incorrectos, roles Auth0 (T3)
+- [ ] Tests de auth a **nivel HTTP** (sin `AUTH_DISABLED`): 401 sin token y 403 por rol — PRD esc. 1,2
 - [ ] Tests de **todos los escenarios de abuso** del PRD (1–9), incluidos payloads maliciosos
-- [ ] Tests del adaptador Notion (reintento/backoff, 429/5xx → 502, no escribir campos fórmula)
+- [x] Tests del adaptador Notion (reintento/backoff, idempotencia, lectura con reintento) — 4 tests
 - [x] Cobertura del núcleo de dominio **≥ 90 %** (100 %) verificada en CI (`--cov-fail-under=90`)
 
 ## Seguridad de la construcción (CI — A02/A03/A04)

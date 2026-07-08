@@ -34,7 +34,7 @@ uvicorn mec_aidlc_api.main:app --reload --app-dir src
 
 ## Tests
 ```bash
-pytest        # 22 tests: scoring de dominio + roles JWT + API (incluye escenarios de abuso)
+pytest        # 33 tests: scoring, verificación JWT, adaptador Notion (reintento/idempotencia), TOCTOU y API
 ```
 
 ## Endpoints
@@ -51,8 +51,9 @@ Contrato completo: `../../docs/02-design/api-contract.md`.
   RBAC deny-by-default — ADR-0003.
 - Validación estricta de esquema (`extra=forbid`, ítems enteros 1–4) — A05.
 - Secretos solo desde entorno; `.env` fuera del repo — ADR-0005.
-- Idempotencia por (evaluado + fecha) — A08.
-- Manejo de errores sin fuga de detalles; logs de auditoría sin datos sensibles — A09/A10.
+- Idempotencia por (evaluado + fecha): lock anti-TOCTOU en el caso de uso + creación idempotente — A08.
+- Reintento con backoff ante caídas/rate-limit de Notion; errores sin fuga de detalles; logs de
+  auditoría sin datos sensibles — A09/A10.
 
 > **Escala y umbrales confirmados (ADR-0006 `accepted`):** ítems enteros 1–4 (grados Alles
 > A=4…D=1); regla de transición por umbrales con pivote 3.0=B. Centralizados en `domain/scoring.py`.

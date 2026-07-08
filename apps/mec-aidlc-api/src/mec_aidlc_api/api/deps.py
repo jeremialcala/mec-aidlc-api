@@ -62,3 +62,8 @@ def requiere_rol(*roles_permitidos: str):
 def get_repository(request: Request):
     """El repositorio Notion se crea una vez y vive en app.state (lifespan)."""
     return request.app.state.repository
+
+
+def get_locks(request: Request):
+    """Locks por clave compartidos (creados una vez en el lifespan)."""
+    return request.app.state.locks
