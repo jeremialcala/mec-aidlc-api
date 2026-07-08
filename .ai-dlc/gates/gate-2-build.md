@@ -27,7 +27,8 @@ Cierre de la Fase 03 (construcción, test-first). Marcar solo lo fundamentado (H
 - [x] Cobertura del núcleo de dominio **≥ 90 %** (100 %) verificada en CI (`--cov-fail-under=90`)
 
 ## Seguridad de la construcción (CI — A02/A03/A04)
-- [ ] **Lockfile** de dependencias (pin exacto, incluye SDK/HTTP y libs JWT) — ADR-0005, A03
+- [x] **Lockfile** con hashes (`requirements.txt` / `requirements-dev.txt`, `uv pip compile --universal`);
+      el CI instala desde él con verificación de hashes — ADR-0005, A03
 - [x] **SCA** de dependencias en CI (`pip-audit`) — A03
 - [x] **Escaneo de secretos** en CI (`gitleaks`); falla si detecta secretos — A02/A04
 - [x] **SAST / lint de seguridad** en CI (`ruff` reglas `S` + `bandit`)

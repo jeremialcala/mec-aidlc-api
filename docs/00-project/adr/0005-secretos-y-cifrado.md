@@ -17,7 +17,9 @@ todos los datos personales.
 - Cargar secretos solo desde **variables de entorno / gestor de secretos**, nunca en el repo
   (validado con `pydantic-settings`; `.env` en `.gitignore`, `.env.example` sin valores reales).
 - **TLS 1.2+** obligatorio para tráfico entrante y hacia la API de Notion.
-- Escaneo de secretos y de dependencias (SCA + lockfile) en CI (Gate 2/4).
+- **Lockfile con hashes** (`requirements.txt` / `requirements-dev.txt`, generados con
+  `uv pip compile --universal --generate-hashes`) para instalaciones reproducibles y verificadas;
+  **SCA** con `pip-audit -r` sobre el lock y **escaneo de secretos** (gitleaks) en CI — A03.
 - **Rotación cada 7 días** de los secretos bajo nuestro control: token de integración Notion
   y credenciales del cliente Auth0 (M2M). Las claves de firma JWT las rota Auth0; el API cachea
   el JWKS y lo revalida, por lo que absorbe la rotación sin cambios de configuración.

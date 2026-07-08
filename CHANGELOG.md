@@ -26,6 +26,8 @@ y el proyecto se adhiere al [Versionado Semántico](https://semver.org/lang/es/)
 ### Seguridad
 - Verificación JWT endurecida: `iss` y `aud` **obligatorios** con JWKS (fail-closed) y `require`
   de `exp`/`iss`/`aud`; rechazo de `alg=none` verificado con test — T1/T3.
+- **Lockfile con hashes** (`requirements.txt` / `requirements-dev.txt`, `uv pip compile --universal
+  --generate-hashes`): el CI instala con verificación de hashes y `pip-audit -r` audita el lock — A03.
 
 ## [0.1.0] - 2026-07-08
 

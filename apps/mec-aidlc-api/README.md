@@ -22,8 +22,20 @@ Regla de dependencia: `api → application → domain`; `adapters` implementa pu
 ```bash
 cd apps/mec-aidlc-api
 python -m venv .venv && source .venv/bin/activate
-pip install -e ".[dev]"
-cp .env.example .env   # rellena NOTION_TOKEN y config JWT
+pip install -e ".[dev]"                 # desarrollo (resuelve deps desde pyproject)
+cp .env.example .env                     # rellena NOTION_TOKEN y config JWT
+```
+
+Instalación reproducible (igual que el CI), verificando hashes desde el lockfile:
+```bash
+pip install -r requirements-dev.txt      # versiones exactas + hashes (A03)
+pip install -e . --no-deps
+```
+
+Regenerar el lockfile tras cambiar dependencias (requiere `uv`):
+```bash
+uv pip compile --universal --generate-hashes -o requirements.txt pyproject.toml
+uv pip compile --universal --generate-hashes --extra dev -o requirements-dev.txt pyproject.toml
 ```
 
 ## Ejecutar
