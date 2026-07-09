@@ -49,12 +49,13 @@ uvicorn mec_aidlc_api.main:app --reload --app-dir src
   un lock en proceso (`KeyedLocks`); con varios workers/réplicas dos envíos simultáneos podrían
   duplicar. Ejecuta con `--workers 1` y una sola réplica (Notion no ofrece unicidad — ADR-0007).
 - **`APP_ENV=prod`**: la app valida al arrancar y **falla** si `AUTH_DISABLED=true`, falta
-  `JWT_JWKS_URL` o hay `JWT_DEV_SHARED_SECRET` (evita auth degradada por configuración).
+  `JWT_JWKS_URL`, hay `JWT_DEV_SHARED_SECRET` o falta `NOTION_FICHAS_DATA_SOURCE_ID` (evita auth
+  degradada y el fail-open de la validación del evaluado).
 - Servidor **interno**, no expuesto a Internet; TLS 1.2+ (ADR-0005).
 
 ## Tests
 ```bash
-pytest        # 71 tests: scoring, JWT (verificación + auth HTTP), adaptador Notion, TOCTOU y abuso del PRD (1–9)
+pytest        # 74 tests: scoring, JWT (verificación + auth HTTP), adaptador Notion, TOCTOU y abuso del PRD (1–9)
 ```
 
 ## Endpoints
@@ -62,7 +63,7 @@ pytest        # 71 tests: scoring, JWT (verificación + auth HTTP), adaptador No
 |---|---|---|---|
 | GET | `/health` | — | Liveness/readiness |
 | POST | `/v1/resultados` | evaluador | Registra un resultado y devuelve el derivado |
-| GET | `/v1/resultados?evaluado_id=...` | evaluador, lector | Lista resultados de un evaluado |
+| GET | `/v1/resultados?evaluado_id=...&limit=50` | evaluador, lector | Lista resultados (acotada por `limit`, 1–100) |
 
 Contrato completo: `../../docs/02-design/api-contract.md`.
 

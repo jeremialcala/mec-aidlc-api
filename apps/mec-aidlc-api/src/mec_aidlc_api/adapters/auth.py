@@ -29,8 +29,12 @@ class Principal:
 class JwtVerifier:
     def __init__(self, settings: Settings) -> None:
         self._s = settings
+        # timeout explícito: el fetch de JWKS es bloqueante (corre en el threadpool); un JWKS
+        # lento no debe agotar el pool ni colgar la verificación (M2).
         self._jwks_client: PyJWKClient | None = (
-            PyJWKClient(settings.jwt_jwks_url) if settings.jwt_jwks_url else None
+            PyJWKClient(settings.jwt_jwks_url, timeout=settings.jwt_jwks_timeout_s)
+            if settings.jwt_jwks_url
+            else None
         )
 
     def verificar(self, token: str) -> Principal:

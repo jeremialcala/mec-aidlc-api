@@ -49,6 +49,15 @@ Validación: cada competencia es un **entero en `[1, 4]`** (grado Alles A=4, B=3
 ```
 `igv` va en escala 1–4; `igv_pct` es su normalización lineal a 0–100 (`(igv−1)/3×100`).
 
+## GET /v1/resultados — query + response 200 (JSON)
+Query: `evaluado_id` (requerido) y `limit` (opcional, entero `[1, 100]`, por defecto `50`).
+Respuesta: lista acotada de proyecciones livianas (una página de Notion; sin cursor todavía).
+```json
+[
+  { "id": "notion-page-uuid", "url": "https://www.notion.so/..." }
+]
+```
+
 ## Códigos de error
 | Código | Caso | OWASP |
 |---|---|---|

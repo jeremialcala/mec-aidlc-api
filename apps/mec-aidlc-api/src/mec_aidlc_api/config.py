@@ -53,6 +53,9 @@ class Settings(BaseSettings):
     jwt_jwks_url: str = Field(
         default="", description="JWKS del tenant Auth0 (.well-known/jwks.json)"
     )
+    jwt_jwks_timeout_s: float = Field(
+        default=5.0, description="Timeout del fetch de JWKS (evita bloquear el threadpool) — M2"
+    )
     jwt_algorithms: str = Field(
         default="RS256", description="Algoritmos permitidos (Auth0 firma RS256)"
     )
@@ -95,6 +98,11 @@ class Settings(BaseSettings):
         if self.jwt_dev_shared_secret:
             raise RuntimeError(
                 "JWT_DEV_SHARED_SECRET debe estar vacío en producción (solo dev)."
+            )
+        if not self.notion_fichas_data_source_id:
+            raise RuntimeError(
+                "En producción se requiere NOTION_FICHAS_DATA_SOURCE_ID: sin él la validación "
+                "de existencia del evaluado queda desactivada (fail-open) — ADR-0007, esc. #5."
             )
 
 

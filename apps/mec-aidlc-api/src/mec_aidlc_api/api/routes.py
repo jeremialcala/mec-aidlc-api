@@ -18,7 +18,12 @@ from ..application.services import (
 )
 from ..domain.models import Evaluacion
 from .deps import get_locks, get_repository, requiere_rol
-from .schemas import PromediosResponse, RegistrarResultadoRequest, ResultadoResponse
+from .schemas import (
+    PromediosResponse,
+    RegistrarResultadoRequest,
+    ResultadoListItem,
+    ResultadoResponse,
+)
 
 logger = logging.getLogger("mec_aidlc_api")
 
@@ -83,17 +88,23 @@ async def registrar_resultado(
     )
 
 
-@router.get("/v1/resultados", tags=["resultados"])
+@router.get(
+    "/v1/resultados",
+    response_model=list[ResultadoListItem],
+    tags=["resultados"],
+)
 async def listar_resultados(
     principal: Annotated[Principal, Depends(requiere_rol("evaluador", "lector"))],
     repo: Annotated[ResultRepository, Depends(get_repository)],
     evaluado_id: Annotated[str, Query(min_length=1)],
-) -> list[dict]:
+    limit: Annotated[int, Query(ge=1, le=100)] = 50,
+) -> list[ResultadoListItem]:
     caso = ListarResultadosPorEvaluado(repo)
     try:
-        return await caso.ejecutar(evaluado_id)
+        filas = await caso.ejecutar(evaluado_id, limit)
     except NotionUnavailableError as exc:
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail="Servicio de persistencia no disponible.",
         ) from exc
+    return [ResultadoListItem(**f) for f in filas]

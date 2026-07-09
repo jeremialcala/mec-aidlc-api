@@ -19,7 +19,8 @@ Fichas"); esto no impide **leer** ese padrón para validar integridad.
   modo **solo lectura** (recupera la página y comprueba que su `parent` sea la BD de fichas).
   Si no existe → **422**, sin crear página huérfana. Es lectura, no gestión: no viola el
   no-scope. Se configura con `NOTION_FICHAS_DATA_SOURCE_ID`; si está vacío, la validación se
-  omite (dev/local) — **debe** configurarse en producción.
+  omite (dev/local) — en producción es **obligatorio**: con `APP_ENV=prod` la app **falla al arrancar** si
+  no está configurado, para no desplegar el control en modo fail-open (M1).
 - **#3 — Alcance de acceso: control por rol, sin alcance por evaluado.** Cualquier usuario
   autenticado con rol `evaluador` (escritura) o `lector` (lectura) puede operar sobre
   **cualquier** evaluado. El control de acceso es el **rol** (RBAC deny-by-default, ADR-0003)

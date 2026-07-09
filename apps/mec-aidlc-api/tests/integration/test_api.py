@@ -36,7 +36,7 @@ class FakeRepo:
         self.guardados.append((evaluacion, resultado))
         return "https://www.notion.so/fake-page"
 
-    async def listar_por_evaluado(self, evaluado_id: str) -> list[dict]:
+    async def listar_por_evaluado(self, evaluado_id: str, limit: int = 50) -> list[dict]:
         return [{"id": "x", "url": "https://www.notion.so/fake-page"}]
 
     async def aclose(self) -> None:

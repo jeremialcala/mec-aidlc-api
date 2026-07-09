@@ -44,5 +44,5 @@ class ListarResultadosPorEvaluado:
     def __init__(self, repo: ResultRepository) -> None:
         self._repo = repo
 
-    async def ejecutar(self, evaluado_id: str) -> list[dict]:
-        return await self._repo.listar_por_evaluado(evaluado_id)
+    async def ejecutar(self, evaluado_id: str, limit: int = 50) -> list[dict]:
+        return await self._repo.listar_por_evaluado(evaluado_id, limit)

@@ -27,6 +27,8 @@ class ResultRepository(Protocol):
         """Persiste el resultado y devuelve la URL de la página creada."""
         ...
 
-    async def listar_por_evaluado(self, evaluado_id: str) -> list[dict]:
-        """Lista resultados de un evaluado (proyección liviana para consulta)."""
+    async def listar_por_evaluado(
+        self, evaluado_id: str, limit: int = 50
+    ) -> list[dict]:
+        """Lista resultados de un evaluado (proyección liviana, acotada por `limit`)."""
         ...

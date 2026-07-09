@@ -5,6 +5,7 @@ from mec_aidlc_api.config import Settings
 
 _PROD_OK = dict(
     notion_token="t",
+    notion_fichas_data_source_id="fichas-ds",
     app_env="prod",
     auth_disabled=False,
     jwt_jwks_url="https://tenant.auth0.com/.well-known/jwks.json",
@@ -37,6 +38,12 @@ def test_prod_requiere_jwks():
 def test_prod_rechaza_secreto_dev():
     with pytest.raises(RuntimeError):
         _settings(jwt_dev_shared_secret="secreto-heredado").validar_seguridad()
+
+
+def test_prod_requiere_fichas():
+    # Sin BD de fichas la validación del evaluado queda fail-open: en prod debe fallar (M1).
+    with pytest.raises(RuntimeError, match="NOTION_FICHAS_DATA_SOURCE_ID"):
+        _settings(notion_fichas_data_source_id="").validar_seguridad()
 
 
 def test_dev_no_valida():

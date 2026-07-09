@@ -117,6 +117,22 @@ async def test_guardar_4xx_no_transitorio_es_unavailable():
     await repo.aclose()
 
 
+async def test_listar_respeta_limit_en_page_size_y_recorte():
+    # El `limit` acota la respuesta: va como page_size y recorta defensivamente (M3).
+    capt = {}
+
+    def handler(request):
+        capt["payload"] = json.loads(request.content)
+        muchos = [{"id": str(i), "url": f"u{i}"} for i in range(5)]
+        return httpx.Response(200, json={"results": muchos})
+
+    repo = _repo(handler)
+    out = await repo.listar_por_evaluado("e1", limit=2)
+    assert capt["payload"]["page_size"] == 2
+    assert len(out) == 2
+    await repo.aclose()
+
+
 async def test_lectura_reintenta_en_error_transitorio():
     n = {"q": 0}
 

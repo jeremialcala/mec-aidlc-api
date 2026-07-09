@@ -19,6 +19,8 @@ y el proyecto se adhiere al [Versionado Semántico](https://semver.org/lang/es/)
   por entorno y la app **falla al arrancar** si falta (fail-fast, sin ese ID en el repo) — B2.
 - El scoring lanzaba `ZeroDivisionError` (500) ante un conjunto de competencias incompleto; ahora
   valida que estén las 16 y lanza un error de dominio claro antes de promediar — B3.
+- La validación de existencia del evaluado era *fail-open*: sin `NOTION_FICHAS_DATA_SOURCE_ID` se
+  omitía en silencio. En producción ahora es obligatorio y la app **falla al arrancar** si falta — M1.
 
 ### Añadido
 - Reintento con backoff exponencial (honra `Retry-After`) e idempotencia de creación en el
@@ -37,6 +39,8 @@ y el proyecto se adhiere al [Versionado Semántico](https://semver.org/lang/es/)
   evaluado); se retira el escenario #3 del PRD y se sustituye por esa política — esc. #3.
 - `NOTION_ESTADO_DONE` configurable (opción de la propiedad 'Estado') y contrato de esquema de
   Notion documentado en ADR-0002 (M5). Nota de despliegue de instancia única en el README (M3).
+- `GET /v1/resultados`: `response_model` explícito (`ResultadoListItem`) y parámetro `limit`
+  (1–100, 50 por defecto) que acota la respuesta (va como `page_size` a Notion) — M3.
 
 ### Seguridad
 - Verificación JWT endurecida: `iss` y `aud` **obligatorios** con JWKS (fail-closed) y `require`
@@ -51,6 +55,8 @@ y el proyecto se adhiere al [Versionado Semántico](https://semver.org/lang/es/)
   resolvía "latest" dinámicamente): descarga reproducible y evidencia de manipulación — A03, B6.
 - Se deja de versionar `.coverage` (artefacto de tests) y se amplía `.gitignore` (raíz y del
   subproyecto) para no filtrar artefactos de build/tests — B5.
+- `PyJWKClient` usa un **timeout** configurable (`JWT_JWKS_TIMEOUT_S`, 5 s por defecto): el fetch
+  de JWKS es bloqueante (threadpool) y un IdP lento no debe degradar el servicio — M2.
 
 ## [0.1.0] - 2026-07-08
 

@@ -58,3 +58,10 @@ class ResultadoResponse(BaseModel):
     igv_pct: float  # IGV normalizado a 0–100
     estadio: str
     patron_diagnostico: str
+
+
+class ResultadoListItem(BaseModel):
+    """Proyección liviana de un resultado listado (contrato de salida explícito)."""
+
+    id: str | None = None
+    url: str | None = None

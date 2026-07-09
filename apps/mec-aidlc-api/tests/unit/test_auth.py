@@ -169,3 +169,16 @@ def test_jwks_fail_closed_sin_iss_aud():
     # Con JWKS configurado pero sin iss/aud → fail-closed (no verifica).
     with pytest.raises(AuthError):
         _rsa_verifier(jwt_issuer="", jwt_audience="").verificar(_rs256_token())
+
+
+def test_jwks_client_usa_timeout_configurado():
+    # El fetch de JWKS es bloqueante (threadpool); el timeout debe llegar al PyJWKClient (M2).
+    verifier = JwtVerifier(
+        Settings(
+            notion_token="t",
+            jwt_jwks_url="https://tenant.auth0.com/.well-known/jwks.json",
+            jwt_jwks_timeout_s=3.0,
+        )
+    )
+    assert verifier._jwks_client is not None
+    assert verifier._jwks_client.timeout == 3.0

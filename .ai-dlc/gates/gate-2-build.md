@@ -49,6 +49,9 @@ Cierre de la Fase 03 (construcción, test-first). Marcar solo lo fundamentado (H
 - [x] **B5** — `.coverage` deja de versionarse; `.gitignore` ampliado (raíz + subproyecto)
 - [x] **B6** — gitleaks fijado por versión + **sha256 pinneado** (sin resolución dinámica de "latest")
 - [x] **B1** — redondeo doble del IGV documentado como intencional (coherente con lo almacenado)
+- [x] **M1(rev2)** — validación de evaluado ya no es fail-open en prod: `APP_ENV=prod` exige `NOTION_FICHAS_DATA_SOURCE_ID`
+- [x] **M2(rev2)** — `PyJWKClient` con timeout configurable (`JWT_JWKS_TIMEOUT_S`); no cuelga el threadpool
+- [x] **M3(rev2)** — `GET /v1/resultados` con `response_model` y `limit` (1–100) acotando la respuesta
 
 ## Operación y cumplimiento (habilita la retención definida en Gate 0)
 - [ ] Mecanismo/job de **retención**: purga o anonimización de resultados a *relación laboral + 2 años*

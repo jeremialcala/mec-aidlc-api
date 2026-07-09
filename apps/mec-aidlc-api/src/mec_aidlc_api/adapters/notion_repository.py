@@ -119,16 +119,20 @@ class NotionResultRepository:
             return url
         raise NotionUnavailableError("Notion no disponible al crear la página.") from ultimo
 
-    async def listar_por_evaluado(self, evaluado_id: str) -> list[dict]:
+    async def listar_por_evaluado(
+        self, evaluado_id: str, limit: int = 50
+    ) -> list[dict]:
         payload = {
             "filter": {
                 "property": self._s.notion_evaluado_property,
                 "relation": {"contains": evaluado_id},
-            }
+            },
+            "page_size": limit,  # acota la respuesta de Notion (no seguimos cursor: 1 página)
         }
         data = await self._query_con_reintentos(payload)
         return [
-            {"id": r.get("id"), "url": r.get("url")} for r in data.get("results", [])
+            {"id": r.get("id"), "url": r.get("url")}
+            for r in data.get("results", [])[:limit]
         ]
 
     # --- Helpers de idempotencia y transporte ---
