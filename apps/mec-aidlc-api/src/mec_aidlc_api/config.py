@@ -18,8 +18,8 @@ class Settings(BaseSettings):
     # --- Notion (ADR-0002 / ADR-0005) ---
     notion_token: str = Field(..., description="Token de integración Notion (secreto)")
     notion_data_source_id: str = Field(
-        default="089a8a3d-02f4-4aa6-bad5-1d3c53728e32",
-        description="Data source 'Resultados Test MEC-AIDLC'",
+        default="",
+        description="Data source 'Resultados Test MEC-AIDLC' (requerido; se configura por entorno)",
     )
     notion_fichas_data_source_id: str = Field(
         default="",

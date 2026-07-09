@@ -15,6 +15,10 @@ y el proyecto se adhiere al [Versionado Semántico](https://semver.org/lang/es/)
   ahora se crea una sola vez en el `lifespan` y se comparte (coherente con ADR-0003).
 - Un 4xx no transitorio de Notion (token/permiso/esquema/versión) devolvía 500; ahora se mapea a
   **502 controlado** sin volcar el cuerpo (M1, A10).
+- El default de `NOTION_DATA_SOURCE_ID` era un ID de tenant fijado en el código; ahora es requerido
+  por entorno y la app **falla al arrancar** si falta (fail-fast, sin ese ID en el repo) — B2.
+- El scoring lanzaba `ZeroDivisionError` (500) ante un conjunto de competencias incompleto; ahora
+  valida que estén las 16 y lanza un error de dominio claro antes de promediar — B3.
 
 ### Añadido
 - Reintento con backoff exponencial (honra `Retry-After`) e idempotencia de creación en el
@@ -43,6 +47,10 @@ y el proyecto se adhiere al [Versionado Semántico](https://semver.org/lang/es/)
   fail-closed sin iss/aud) — M4.
 - **Lockfile con hashes** (`requirements.txt` / `requirements-dev.txt`, `uv pip compile --universal
   --generate-hashes`): el CI instala con verificación de hashes y `pip-audit -r` audita el lock — A03.
+- **gitleaks fijado** a una versión concreta y verificado por **sha256 pinneado** en el CI (antes se
+  resolvía "latest" dinámicamente): descarga reproducible y evidencia de manipulación — A03, B6.
+- Se deja de versionar `.coverage` (artefacto de tests) y se amplía `.gitignore` (raíz y del
+  subproyecto) para no filtrar artefactos de build/tests — B5.
 
 ## [0.1.0] - 2026-07-08
 

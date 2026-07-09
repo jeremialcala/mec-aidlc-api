@@ -1,4 +1,6 @@
 """Tests del núcleo de scoring MEC-AIDLC (sin red)."""
+import pytest
+
 from mec_aidlc_api.domain import scoring
 from mec_aidlc_api.domain.models import COMPETENCIA_A_DOMINIO, Estadio
 
@@ -97,3 +99,18 @@ def test_patron_contribuidor_sin_desbalance():
     res = scoring.evaluar(_comps(d1=2, d2=2, d3=2, d4=3))
     assert res.estadio == Estadio.CONTRIBUIDOR_INDIVIDUAL
     assert "contribuidor individual" in res.patron_diagnostico.lower()
+
+
+def test_evaluar_rechaza_competencias_incompletas():
+    # Un dict parcial haría a _promedio dividir por cero: debe fallar claro (no ZeroDivisionError).
+    comps = _comps()
+    comps.pop("colaboracion")
+    with pytest.raises(ValueError, match="faltan"):
+        scoring.evaluar(comps)
+
+
+def test_evaluar_rechaza_competencias_desconocidas():
+    comps = _comps()
+    comps["competencia_inventada"] = 3
+    with pytest.raises(ValueError, match="sobran"):
+        scoring.evaluar(comps)

@@ -37,6 +37,10 @@ class NotionResultRepository:
     """Implementa el puerto ResultRepository sobre la API de Notion."""
 
     def __init__(self, settings: Settings, client: httpx.AsyncClient | None = None) -> None:
+        if not settings.notion_data_source_id:
+            raise ValueError(
+                "NOTION_DATA_SOURCE_ID es obligatorio (data source de resultados)."
+            )
         self._s = settings
         self._client = client or httpx.AsyncClient(
             base_url=NOTION_API,

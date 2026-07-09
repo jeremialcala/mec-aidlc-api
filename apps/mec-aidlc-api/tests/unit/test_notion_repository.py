@@ -20,6 +20,7 @@ from mec_aidlc_api.domain.models import COMPETENCIA_A_DOMINIO, Evaluacion
 def _settings(**over):
     base = dict(
         notion_token="test-token",
+        notion_data_source_id="ds-test",
         notion_max_reintentos=2,
         notion_backoff_base_s=0.0,
         notion_backoff_max_s=0.0,
@@ -174,6 +175,12 @@ async def test_evaluado_existe_false_si_ficha_de_otra_bd():
 
 
 # --- Contrato con la API de Notion (A1: data sources requiere versión moderna) ---
+
+
+def test_repo_requiere_data_source_id():
+    # Sin data source configurado la app no debe arrancar (fail-fast, no request malformado) — B2.
+    with pytest.raises(ValueError, match="NOTION_DATA_SOURCE_ID"):
+        NotionResultRepository(_settings(notion_data_source_id=""))
 
 
 async def test_cliente_declara_version_de_data_sources():

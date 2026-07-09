@@ -13,6 +13,7 @@ from asgi_lifespan import LifespanManager
 from httpx import ASGITransport, AsyncClient
 
 os.environ.setdefault("NOTION_TOKEN", "test-token")
+os.environ.setdefault("NOTION_DATA_SOURCE_ID", "ds-test")
 
 from mec_aidlc_api.adapters.auth import JwtVerifier  # noqa: E402
 from mec_aidlc_api.config import Settings, get_settings  # noqa: E402

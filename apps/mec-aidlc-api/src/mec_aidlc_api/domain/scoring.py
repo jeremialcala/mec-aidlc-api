@@ -43,6 +43,20 @@ ALTO = 3.0
 BAJO = 2.0
 
 
+def _validar_competencias(competencias: dict[str, int]) -> None:
+    """Exige exactamente las 16 competencias del marco (defensa del dominio).
+
+    La API ya valida el esquema (Pydantic `extra=forbid`, 16 campos), pero el dominio no debe
+    asumirlo: un dict parcial dejaría a `_promedio` dividiendo por cero. Falla claro y temprano.
+    """
+    esperadas = set(COMPETENCIA_A_DOMINIO)
+    recibidas = set(competencias)
+    if recibidas != esperadas:
+        faltan = sorted(esperadas - recibidas)
+        sobran = sorted(recibidas - esperadas)
+        raise ValueError(f"Competencias inválidas (faltan={faltan}, sobran={sobran}).")
+
+
 def _promedio(competencias: dict[str, int], dominio: Dominio) -> float:
     valores = [
         v for k, v in competencias.items() if COMPETENCIA_A_DOMINIO[k] == dominio
@@ -60,6 +74,9 @@ def calcular_promedios(competencias: dict[str, int]) -> ResultadoDominio:
 
 
 def calcular_igv(p: ResultadoDominio) -> float:
+    # El IGV se deriva de los promedios ya redondeados a 2 decimales (los mismos que se muestran
+    # y persisten), no de los ítems crudos: fuente única y reproducible. El redondeo doble es
+    # intencional y coherente con los valores almacenados (no un artefacto).
     igv = (
         PESO_IGV[Dominio.D1_TECNICO_COGNITIVO] * p.d1
         + PESO_IGV[Dominio.D2_RESULTADOS_OBJETIVOS] * p.d2
@@ -123,6 +140,7 @@ def diagnosticar_patron(p: ResultadoDominio, estadio: Estadio) -> str:
 
 def evaluar(competencias: dict[str, int]) -> ResultadoEvaluacion:
     """Punto de entrada del scoring: de 16 puntajes (1–4) a resultado completo."""
+    _validar_competencias(competencias)
     promedios = calcular_promedios(competencias)
     igv = calcular_igv(promedios)
     estadio = clasificar_estadio(promedios, igv)

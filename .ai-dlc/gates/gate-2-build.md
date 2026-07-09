@@ -44,6 +44,11 @@ Cierre de la Fase 03 (construcción, test-first). Marcar solo lo fundamentado (H
 - [x] **M3** — despliegue de **instancia única** documentado (README → Despliegue)
 - [x] **M4** — tests de la rama de producción **RS256/JWKS** (firma, `alg=none`, aud, fail-closed)
 - [x] **M5** — opción de estado configurable (`NOTION_ESTADO_DONE`) + contrato de esquema (ADR-0002)
+- [x] **B2** — `NOTION_DATA_SOURCE_ID` sin default de tenant en el código; requerido y fail-fast al arrancar
+- [x] **B3** — el scoring valida las 16 competencias (evita `ZeroDivisionError`→500); error de dominio claro
+- [x] **B5** — `.coverage` deja de versionarse; `.gitignore` ampliado (raíz + subproyecto)
+- [x] **B6** — gitleaks fijado por versión + **sha256 pinneado** (sin resolución dinámica de "latest")
+- [x] **B1** — redondeo doble del IGV documentado como intencional (coherente con lo almacenado)
 
 ## Operación y cumplimiento (habilita la retención definida en Gate 0)
 - [ ] Mecanismo/job de **retención**: purga o anonimización de resultados a *relación laboral + 2 años*

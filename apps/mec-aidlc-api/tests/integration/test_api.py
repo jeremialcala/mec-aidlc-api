@@ -11,6 +11,7 @@ from asgi_lifespan import LifespanManager
 from httpx import ASGITransport, AsyncClient
 
 os.environ.setdefault("NOTION_TOKEN", "test-token")
+os.environ.setdefault("NOTION_DATA_SOURCE_ID", "ds-test")
 os.environ["AUTH_DISABLED"] = "true"
 
 from mec_aidlc_api.adapters.notion_repository import NotionUnavailableError  # noqa: E402
