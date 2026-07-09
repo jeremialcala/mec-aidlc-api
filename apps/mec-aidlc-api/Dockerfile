@@ -1,0 +1,44 @@
+# syntax=docker/dockerfile:1
+
+# ---------- Etapa de build: venv con deps verificadas por hash (A03) ----------
+FROM python:3.12-slim AS builder
+
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_NO_CACHE_DIR=1
+
+WORKDIR /build
+
+# Deps primero (capa cacheable): versiones exactas + hashes del lockfile,
+# igual que el CI (README "Instalación reproducible").
+COPY requirements.txt ./
+RUN python -m venv /opt/venv \
+    && /opt/venv/bin/pip install --require-hashes -r requirements.txt
+
+# El paquete después, sin re-resolver dependencias.
+COPY pyproject.toml ./
+COPY src ./src
+RUN /opt/venv/bin/pip install . --no-deps
+
+# ---------- Etapa final: runtime mínimo, sin toolchain de build ----------
+FROM python:3.12-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PATH="/opt/venv/bin:$PATH"
+
+# Usuario sin privilegios (ADR-0005: servidor interno, mínima superficie).
+RUN groupadd --system app && useradd --system --gid app --no-create-home app
+
+COPY --from=builder /opt/venv /opt/venv
+
+USER app
+WORKDIR /app
+EXPOSE 8000
+
+# GET /health es liveness puro (no toca Notion ni el IdP) — apto para healthcheck.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
+    CMD ["python", "-c", "import sys, urllib.request; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=4).status == 200 else 1)"]
+
+# Un solo worker: la idempotencia por (evaluado, fecha) usa un lock en proceso
+# (KeyedLocks, ADR-0007). No aumentar --workers ni escalar réplicas.
+CMD ["uvicorn", "mec_aidlc_api.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1", "--no-server-header"]

@@ -1,0 +1,23 @@
+# Secretos: nunca dentro de la imagen (ADR-0005).
+.env
+.env.*
+
+# Entornos y artefactos locales
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+*.egg-info/
+dist/
+build/
+
+# No necesarios en runtime
+tests/
+README.md
+.gitignore
+Dockerfile
+.dockerignore

@@ -48,6 +48,16 @@ uvicorn mec_aidlc_api.main:app --reload --app-dir src
 - **Instancia única / un solo worker.** La idempotencia por `(evaluado, fecha)` se garantiza con
   un lock en proceso (`KeyedLocks`); con varios workers/réplicas dos envíos simultáneos podrían
   duplicar. Ejecuta con `--workers 1` y una sola réplica (Notion no ofrece unicidad — ADR-0007).
+- **Docker** (desde la raíz del repo; requiere `.env` rellenado en este directorio):
+
+  ```bash
+  docker compose up --build -d      # build multi-stage con hashes del lockfile (A03)
+  curl http://127.0.0.1:8000/health
+  ```
+
+  La imagen ejecuta como usuario sin privilegios, con `--workers 1` fijado y healthcheck sobre
+  `/health`. Compose publica solo en loopback y monta el contenedor `read_only` (ADR-0005).
+  **No escalar** (`--scale api=N`) por la restricción de instancia única.
 - **`APP_ENV=prod`**: la app valida al arrancar y **falla** si `AUTH_DISABLED=true`, falta
   `JWT_JWKS_URL`, hay `JWT_DEV_SHARED_SECRET` o falta `NOTION_FICHAS_DATA_SOURCE_ID` (evita auth
   degradada y el fail-open de la validación del evaluado).

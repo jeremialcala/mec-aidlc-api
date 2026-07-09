@@ -1,0 +1,29 @@
+# Despliegue con Docker Compose (desde la raíz del repo):
+#   cp apps/mec-aidlc-api/.env.example apps/mec-aidlc-api/.env   # y rellenar
+#   docker compose up --build -d
+#
+# IMPORTANTE: una sola réplica y un solo worker (ya fijado en el Dockerfile).
+# La idempotencia por (evaluado, fecha) depende de un lock en proceso (ADR-0007);
+# escalar horizontalmente permitiría duplicados. No usar `--scale api=N`.
+
+services:
+  api:
+    build:
+      context: apps/mec-aidlc-api
+    image: mec-aidlc-api:0.1.0
+    container_name: mec-aidlc-api
+    # Config y secretos solo por entorno (ADR-0005). En prod: APP_ENV=prod activa
+    # el fail-closed de arranque (JWKS obligatorio, sin AUTH_DISABLED ni secreto dev).
+    env_file:
+      - apps/mec-aidlc-api/.env
+    ports:
+      # Servidor interno (ADR-0005): solo loopback del host. TLS lo termina un
+      # proxy inverso delante; para exponer a la red interna, cambiar el bind.
+      - "127.0.0.1:8000:8000"
+    restart: unless-stopped
+    # Endurecimiento: la app no escribe en disco (logs a stdout, sin estado local).
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL

@@ -43,6 +43,11 @@ y el proyecto se adhiere al [Versionado Semántico](https://semver.org/lang/es/)
   Notion documentado en ADR-0002 (M5). Nota de despliegue de instancia única en el README (M3).
 - `GET /v1/resultados`: `response_model` explícito (`ResultadoListItem`) y parámetro `limit`
   (1–100, 50 por defecto) que acota la respuesta (va como `page_size` a Notion) — M3.
+- Despliegue con **Docker**: `Dockerfile` multi-stage (instala el lockfile con verificación de
+  hashes — A03; runtime sin toolchain, usuario sin privilegios, `--workers 1` fijado por ADR-0007 y
+  healthcheck sobre `/health`), `.dockerignore` (excluye `.env`, tests y artefactos) y
+  `docker-compose.yml` (secretos por `env_file`, puerto solo en loopback, `read_only`,
+  `no-new-privileges`, `cap_drop: ALL` — ADR-0005). Sección de uso en el README.
 
 ### Seguridad
 - Verificación JWT endurecida: `iss` y `aud` **obligatorios** con JWKS (fail-closed) y `require`
