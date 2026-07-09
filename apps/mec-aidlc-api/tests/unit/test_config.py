@@ -46,6 +46,14 @@ def test_prod_requiere_fichas():
         _settings(notion_fichas_data_source_id="").validar_seguridad()
 
 
+def test_prod_rechaza_algoritmo_simetrico():
+    # HS256/none con JWKS habilita confusión de clave RS/HS: en prod solo asimétricos (B4).
+    with pytest.raises(RuntimeError, match="asimétricos"):
+        _settings(jwt_algorithms="RS256,HS256").validar_seguridad()
+    with pytest.raises(RuntimeError, match="asimétricos"):
+        _settings(jwt_algorithms="none").validar_seguridad()
+
+
 def test_dev_no_valida():
     # En dev, aun con auth deshabilitada y sin JWKS, no falla el arranque.
     Settings(

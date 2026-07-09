@@ -21,6 +21,8 @@ y el proyecto se adhiere al [Versionado Semántico](https://semver.org/lang/es/)
   valida que estén las 16 y lanza un error de dominio claro antes de promediar — B3.
 - La validación de existencia del evaluado era *fail-open*: sin `NOTION_FICHAS_DATA_SOURCE_ID` se
   omitía en silencio. En producción ahora es obligatorio y la app **falla al arrancar** si falta — M1.
+- Doc: `/health` se documentaba como "readiness" pero es *liveness* (no comprueba dependencias);
+  corregido en README y contrato de API — B2.
 
 ### Añadido
 - Reintento con backoff exponencial (honra `Retry-After`) e idempotencia de creación en el
@@ -59,6 +61,14 @@ y el proyecto se adhiere al [Versionado Semántico](https://semver.org/lang/es/)
   subproyecto) para no filtrar artefactos de build/tests — B5.
 - `PyJWKClient` usa un **timeout** configurable (`JWT_JWKS_TIMEOUT_S`, 5 s por defecto): el fetch
   de JWKS es bloqueante (threadpool) y un IdP lento no debe degradar el servicio — M2.
+- `APP_ENV=prod` exige que `JWT_ALGORITHMS` sean solo **asimétricos** (RS*/ES*/PS*), rechazando
+  HS*/`none`: evita la confusión de clave RS/HS con JWKS — B4.
+- Verificación JWT con **leeway de reloj** configurable (`JWT_LEEWAY_S`, 30 s) para exp/nbf/iat,
+  absorbiendo desfase de reloj entre la API y el IdP — B5.
+- El log de auditoría deja de incluir el `estadio` (resultado de evaluación): registra solo quién
+  (`sub`) registró para quién (`evaluado`) y cuándo — A09, B3.
+- Gate de cobertura ampliado de solo-dominio a **todo el paquete** (adapters/api/application),
+  ≥ 90 % (96 % actual; dominio 100 %) — B1.
 
 ## [0.1.0] - 2026-07-08
 

@@ -84,8 +84,21 @@ def test_rechaza_token_sin_exp():
 
 
 def test_rechaza_token_expirado():
+    # Claramente expirado (más allá del leeway de reloj): se rechaza.
     with pytest.raises(AuthError):
-        JwtVerifier(_settings()).verificar(_token(exp=int(time.time()) - 10))
+        JwtVerifier(_settings()).verificar(_token(exp=int(time.time()) - 3600))
+
+
+def test_acepta_token_expirado_dentro_del_leeway():
+    # Expirado por pocos segundos: el leeway de reloj (30 s por defecto) lo tolera (B5).
+    principal = JwtVerifier(_settings()).verificar(_token(exp=int(time.time()) - 5))
+    assert principal.sub == "auth0|u1"
+
+
+def test_leeway_configurable_en_cero_rechaza_expirado():
+    # Con leeway=0 no hay tolerancia: un token recién expirado se rechaza.
+    with pytest.raises(AuthError):
+        JwtVerifier(_settings(jwt_leeway_s=0)).verificar(_token(exp=int(time.time()) - 5))
 
 
 def test_rechaza_alg_none():

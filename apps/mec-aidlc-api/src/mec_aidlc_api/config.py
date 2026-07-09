@@ -59,6 +59,9 @@ class Settings(BaseSettings):
     jwt_algorithms: str = Field(
         default="RS256", description="Algoritmos permitidos (Auth0 firma RS256)"
     )
+    jwt_leeway_s: float = Field(
+        default=30.0, description="Tolerancia de reloj (s) para exp/nbf/iat — B5"
+    )
     # Auth0 entrega los roles en un claim con namespace (Action) o en 'permissions' (RBAC).
     jwt_roles_claim: str = Field(
         default="",
@@ -103,6 +106,13 @@ class Settings(BaseSettings):
             raise RuntimeError(
                 "En producción se requiere NOTION_FICHAS_DATA_SOURCE_ID: sin él la validación "
                 "de existencia del evaluado queda desactivada (fail-open) — ADR-0007, esc. #5."
+            )
+        algos = self.jwt_algorithms_list
+        if not algos or not all(a.upper().startswith(("RS", "ES", "PS")) for a in algos):
+            raise RuntimeError(
+                "En producción JWT_ALGORITHMS debe listar solo algoritmos asimétricos "
+                f"(RS*/ES*/PS*); evita confusión de clave RS/HS y 'none'. Recibido: "
+                f"{self.jwt_algorithms!r}."
             )
 
 

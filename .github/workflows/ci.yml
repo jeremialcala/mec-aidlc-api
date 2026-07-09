@@ -40,10 +40,10 @@ jobs:
       - name: Bandit (SAST del código de producción)
         run: bandit -q -r src
 
-      - name: Pytest + cobertura del dominio (>= 90%)
+      - name: Pytest + cobertura del paquete (>= 90%)
         run: >-
           pytest
-          --cov=mec_aidlc_api.domain
+          --cov=mec_aidlc_api
           --cov-report=term-missing
           --cov-fail-under=90
 

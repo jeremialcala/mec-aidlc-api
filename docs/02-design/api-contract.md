@@ -3,7 +3,7 @@
 ## Endpoints
 | Método | Ruta | Auth | Rol | Descripción |
 |---|---|---|---|---|
-| GET | `/health` | No | — | Liveness/readiness (sin datos sensibles) |
+| GET | `/health` | No | — | Liveness (no comprueba dependencias; sin datos sensibles) |
 | POST | `/v1/resultados` | JWT | evaluador | Registra un resultado y devuelve el derivado |
 | GET | `/v1/resultados` | JWT | evaluador, lector | Lista resultados por `evaluado_id` |
 

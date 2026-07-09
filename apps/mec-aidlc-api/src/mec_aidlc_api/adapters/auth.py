@@ -59,6 +59,7 @@ class JwtVerifier:
                     algorithms=self._s.jwt_algorithms_list,
                     audience=self._s.jwt_audience,
                     issuer=self._s.jwt_issuer,
+                    leeway=self._s.jwt_leeway_s,
                     options=options,
                 )
             elif self._s.jwt_dev_shared_secret:
@@ -69,6 +70,7 @@ class JwtVerifier:
                     algorithms=["HS256"],
                     audience=self._s.jwt_audience or None,
                     issuer=self._s.jwt_issuer or None,
+                    leeway=self._s.jwt_leeway_s,
                     options=options,
                 )
             else:

@@ -70,12 +70,12 @@ async def registrar_resultado(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail="Servicio de persistencia no disponible. Reintenta más tarde.",
         ) from exc
-    # Auditoría sin datos sensibles (A09).
+    # Auditoría sin datos sensibles (A09): quién (sub) registró para quién (evaluado) y cuándo
+    # (timestamp del log). El resultado (estadio/puntajes) NO se vuelca — es dato de evaluación.
     logger.info(
-        "resultado_registrado sub=%s evaluado=%s estadio=%s",
+        "resultado_registrado sub=%s evaluado=%s",
         principal.sub,
         evaluacion.evaluado_id,
-        resultado.estadio.value,
     )
     p = resultado.promedios
     return ResultadoResponse(

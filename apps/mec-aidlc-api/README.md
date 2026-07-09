@@ -55,13 +55,13 @@ uvicorn mec_aidlc_api.main:app --reload --app-dir src
 
 ## Tests
 ```bash
-pytest        # 74 tests: scoring, JWT (verificación + auth HTTP), adaptador Notion, TOCTOU y abuso del PRD (1–9)
+pytest        # 77 tests: scoring, JWT (verificación + auth HTTP), adaptador Notion, TOCTOU y abuso del PRD (1–9)
 ```
 
 ## Endpoints
 | Método | Ruta | Rol | Descripción |
 |---|---|---|---|
-| GET | `/health` | — | Liveness/readiness |
+| GET | `/health` | — | Liveness (no comprueba dependencias) |
 | POST | `/v1/resultados` | evaluador | Registra un resultado y devuelve el derivado |
 | GET | `/v1/resultados?evaluado_id=...&limit=50` | evaluador, lector | Lista resultados (acotada por `limit`, 1–100) |
 

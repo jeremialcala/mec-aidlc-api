@@ -215,3 +215,4 @@ async def test_logs_de_auditoria_sin_datos_sensibles(client, caplog):
     assert "resultado_registrado" in caplog.text
     assert "conocimientos_tecnicos" not in caplog.text
     assert "competencias" not in caplog.text
+    assert "Generador de Valor" not in caplog.text  # el estadio (resultado) no va al log (B3)

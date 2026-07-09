@@ -24,7 +24,7 @@ Cierre de la Fase 03 (construcción, test-first). Marcar solo lo fundamentado (H
 - [x] Escenarios de abuso del PRD **1–9** cubiertos (auth, esquema, inyección literal, evaluado inexistente→422,
       acceso por rol, Notion→502, logs sin PII, idempotencia)
 - [x] Tests del adaptador Notion (reintento/backoff, idempotencia, lectura con reintento) — 4 tests
-- [x] Cobertura del núcleo de dominio **≥ 90 %** (100 %) verificada en CI (`--cov-fail-under=90`)
+- [x] Cobertura de **todo el paquete ≥ 90 %** (96 %; dominio 100 %) verificada en CI (`--cov-fail-under=90`)
 
 ## Seguridad de la construcción (CI — A02/A03/A04)
 - [x] **Lockfile** con hashes (`requirements.txt` / `requirements-dev.txt`, `uv pip compile --universal`);
@@ -52,6 +52,11 @@ Cierre de la Fase 03 (construcción, test-first). Marcar solo lo fundamentado (H
 - [x] **M1(rev2)** — validación de evaluado ya no es fail-open en prod: `APP_ENV=prod` exige `NOTION_FICHAS_DATA_SOURCE_ID`
 - [x] **M2(rev2)** — `PyJWKClient` con timeout configurable (`JWT_JWKS_TIMEOUT_S`); no cuelga el threadpool
 - [x] **M3(rev2)** — `GET /v1/resultados` con `response_model` y `limit` (1–100) acotando la respuesta
+- [x] **B1(rev2)** — gate de cobertura ampliado a todo el paquete (adapters/api/application), ≥ 90 % (96 %)
+- [x] **B2(rev2)** — doc de `/health` corregida a *liveness* (no comprueba dependencias)
+- [x] **B3(rev2)** — el log de auditoría ya no vuelca el `estadio` (dato de evaluación) — A09
+- [x] **B4(rev2)** — `APP_ENV=prod` exige algoritmos JWT asimétricos (evita confusión RS/HS y `none`)
+- [x] **B5(rev2)** — `leeway` de reloj configurable (`JWT_LEEWAY_S`, 30 s) en la verificación JWT
 
 ## Operación y cumplimiento (habilita la retención definida en Gate 0)
 - [ ] Mecanismo/job de **retención**: purga o anonimización de resultados a *relación laboral + 2 años*

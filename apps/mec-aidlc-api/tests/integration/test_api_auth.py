@@ -119,7 +119,7 @@ async def test_token_basura_es_401(client):
 
 
 async def test_token_expirado_es_401(client):
-    tok = _token(exp=int(time.time()) - 10)
+    tok = _token(exp=int(time.time()) - 3600)  # más allá del leeway de reloj (B5)
     r = await client.post("/v1/resultados", json=_payload(), headers=_auth(tok))
     assert r.status_code == 401
 
