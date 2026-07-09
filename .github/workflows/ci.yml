@@ -89,4 +89,4 @@ jobs:
           curl -sSfL "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/${TARBALL}" -o "${TARBALL}"
           echo "${GITLEAKS_SHA256}  ${TARBALL}" | sha256sum -c -
           tar -xzf "${TARBALL}" gitleaks
-          ./gitleaks detect --source . --redact --verbose --no-banner
+          ./gitleaks detect --source . --config .gitleaks.toml --redact --verbose --no-banner

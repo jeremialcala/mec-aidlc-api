@@ -1,0 +1,19 @@
+# Configuración de gitleaks para el escaneo de secretos en CI.
+#
+# Mantiene el ruleset por defecto (útil para código, config y docs) y allowlista únicamente
+# el directorio de tests: sus fixtures contienen secretos DELIBERADAMENTE ficticios (p. ej.
+# claves HS256 de prueba y un "secreto incorrecto" para validar el rechazo de firma). No son
+# secretos reales. Coherente con la política ya existente en ruff (`S105/S106` en `tests/**`).
+#
+# El allowlist por ruta cubre también los commits históricos (gitleaks escanea todo el árbol
+# de git), por lo que resuelve el hallazgo sin reescribir la historia.
+title = "mec-aidlc-api gitleaks"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Fixtures de test con secretos ficticios (no reales)"
+paths = [
+    '''apps/mec-aidlc-api/tests/''',
+]

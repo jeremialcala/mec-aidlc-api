@@ -53,6 +53,8 @@ y el proyecto se adhiere al [Versionado Semántico](https://semver.org/lang/es/)
   --generate-hashes`): el CI instala con verificación de hashes y `pip-audit -r` audita el lock — A03.
 - **gitleaks fijado** a una versión concreta y verificado por **sha256 pinneado** en el CI (antes se
   resolvía "latest" dinámicamente): descarga reproducible y evidencia de manipulación — A03, B6.
+- `.gitleaks.toml`: mantiene el ruleset por defecto y allowlista solo `apps/mec-aidlc-api/tests/`
+  (fixtures con secretos ficticios) para evitar falsos positivos; coherente con `S105/S106` de ruff.
 - Se deja de versionar `.coverage` (artefacto de tests) y se amplía `.gitignore` (raíz y del
   subproyecto) para no filtrar artefactos de build/tests — B5.
 - `PyJWKClient` usa un **timeout** configurable (`JWT_JWKS_TIMEOUT_S`, 5 s por defecto): el fetch
